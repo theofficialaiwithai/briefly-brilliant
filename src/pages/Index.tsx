@@ -27,7 +27,7 @@ const Index = () => {
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <Logo />
         <Link
-          to="/onboarding"
+          to="/quiz"
           className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
           Get started
@@ -48,7 +48,7 @@ const Index = () => {
           </p>
           <div className="mt-10 flex justify-center">
             <Button asChild size="lg" className="h-12 rounded-xl px-6 text-base shadow-card">
-              <Link to="/onboarding">
+              <Link to="/quiz">
                 Find My Resources
                 <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
