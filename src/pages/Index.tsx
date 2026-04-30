@@ -1,23 +1,58 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, ClipboardList, Sparkles, TrendingUp } from "lucide-react";
+import {
+  ArrowRight,
+  ClipboardList,
+  Sparkles,
+  TrendingUp,
+  Target,
+  Users,
+  Tag,
+  RefreshCw,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 
 const steps = [
   {
     icon: ClipboardList,
-    title: "Tell us your score",
-    body: "Enter your current practice score and where you're stuck.",
+    title: "Take the quiz",
+    body: "Tell us your current score, your weak section, your timeline, and your budget. Takes under 5 minutes.",
+    bg: "#7C6FF7",
   },
   {
     icon: Sparkles,
     title: "Get matched",
-    body: "We surface the resources that worked for students at your exact plateau.",
+    body: "Our community-powered AI surfaces the exact resources that moved the needle for students at your plateau.",
+    bg: "#4ADE80",
   },
   {
     icon: TrendingUp,
-    title: "Report your progress",
-    body: "Every score movement makes the recommendations smarter for everyone.",
+    title: "Track your breakthrough",
+    body: "Log a score after completing a resource. Every data point — including skips — makes the matching smarter for everyone.",
+    bg: "#FB923C",
+  },
+];
+
+const features = [
+  {
+    icon: Target,
+    title: "Score-matched resources",
+    body: "Every recommendation is calibrated to where you actually are — not where you want to be.",
+  },
+  {
+    icon: Users,
+    title: "Community-powered rankings",
+    body: "Resources rise to the top based on what students at your score range report actually working.",
+  },
+  {
+    icon: Tag,
+    title: "Free and paid, all in one place",
+    body: "Filter by budget. From free Reddit threads to full prep courses — ranked by what gets results.",
+  },
+  {
+    icon: RefreshCw,
+    title: "Skips teach the algorithm too",
+    body: "Resources students skip are as informative as ones they complete. The matching gets smarter with every interaction.",
   },
 ];
 
@@ -56,25 +91,91 @@ const Index = () => {
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-6 pb-24">
-          <div className="grid gap-6 md:grid-cols-3">
-            {steps.map((s, i) => (
-              <div
-                key={s.title}
-                className="group rounded-2xl border border-border bg-card p-7 shadow-card transition-all hover:-translate-y-0.5 hover:shadow-card-hover"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-soft text-primary">
+        {/* Section A — How It Works (dark) */}
+        <section className="mx-auto max-w-6xl px-6 pb-16">
+          <div
+            className="rounded-[20px] p-10 text-white md:p-16"
+            style={{ backgroundColor: "#0F0F0F" }}
+          >
+            <span
+              className="text-xs font-semibold uppercase tracking-[0.18em]"
+              style={{ color: "#0D9488" }}
+            >
+              How it works
+            </span>
+            <h2 className="mt-4 max-w-2xl text-4xl font-bold leading-tight text-white md:text-5xl">
+              Three steps from plateau to breakthrough.
+            </h2>
+
+            <div className="mt-12 grid gap-10 md:grid-cols-3 md:gap-8">
+              {steps.map((s) => (
+                <div key={s.title}>
+                  <span
+                    className="flex h-12 w-12 items-center justify-center rounded-xl text-white"
+                    style={{ backgroundColor: s.bg }}
+                  >
                     <s.icon className="h-5 w-5" />
                   </span>
-                  <span className="text-sm font-semibold text-muted-foreground">
-                    0{i + 1}
-                  </span>
+                  <h3 className="mt-6 text-lg font-bold text-white">{s.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-white/60">
+                    {s.body}
+                  </p>
                 </div>
-                <h3 className="mt-5 text-lg font-semibold text-foreground">{s.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Section B — Features */}
+        <section
+          className="px-6 pb-24"
+          style={{ backgroundColor: "#FAFAF8" }}
+        >
+          <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-2 md:gap-16">
+            <div>
+              <span
+                className="text-xs font-semibold uppercase tracking-[0.18em]"
+                style={{ color: "#0D9488" }}
+              >
+                Features
+              </span>
+              <h2
+                className="mt-4 text-3xl font-bold leading-tight md:text-4xl"
+                style={{ color: "#1A1A2E" }}
+              >
+                Everything you need to find your breakthrough resource.
+              </h2>
+              <p className="mt-5 text-base text-muted-foreground">
+                The best LSAT study content already exists. Test Briefs is the
+                layer that finally makes it findable.
+              </p>
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              {features.map((f) => (
+                <div
+                  key={f.title}
+                  className="rounded-2xl border bg-white p-6 shadow-card"
+                  style={{ borderColor: "#E5E7EB" }}
+                >
+                  <span
+                    className="flex h-11 w-11 items-center justify-center rounded-full"
+                    style={{ backgroundColor: "#EDE9FE" }}
+                  >
+                    <f.icon className="h-5 w-5" style={{ color: "#7C6FF7" }} />
+                  </span>
+                  <h3
+                    className="mt-5 text-base font-bold"
+                    style={{ color: "#1A1A2E" }}
+                  >
+                    {f.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    {f.body}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       </main>
