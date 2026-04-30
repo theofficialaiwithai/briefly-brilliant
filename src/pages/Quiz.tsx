@@ -152,7 +152,7 @@ const Quiz = () => {
           </div>
           <Button
             size="lg"
-            onClick={() => navigate("/feed")}
+            onClick={() => navigate("/quiz/results")}
             className="mt-10 h-12 rounded-xl px-6 text-base shadow-card"
           >
             See My Matched Resources

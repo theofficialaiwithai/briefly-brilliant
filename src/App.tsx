@@ -7,6 +7,7 @@ import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Feed from "./pages/Feed.tsx";
 import Quiz from "./pages/Quiz.tsx";
+import QuizResults from "./pages/QuizResults.tsx";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/quiz" element={<Quiz />} />
+          <Route path="/quiz/results" element={<QuizResults />} />
           <Route path="/feed" element={<Feed />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
