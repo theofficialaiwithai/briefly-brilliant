@@ -160,7 +160,7 @@ const Index = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
-              className="flex-1 bg-transparent outline-none border-0 text-center"
+              className="flex-1 bg-transparent outline-none border-0 text-left"
               style={{ fontSize: "0.95rem" }}
             />
             <button
