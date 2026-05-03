@@ -146,7 +146,7 @@ const Index = () => {
                 Everything you need to find your breakthrough resource.
               </h2>
               <p className="mt-5 text-base text-muted-foreground">
-                The best LSAT study content already exists. Test Briefs is the
+                The best LSAT study content already exists. Briefly Brilliant is the
                 layer that finally makes it findable.
               </p>
             </div>
