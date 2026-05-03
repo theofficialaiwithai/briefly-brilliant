@@ -98,50 +98,26 @@ const Index = () => {
       </header>
 
       <main>
-        <section
-          className="hero-section"
-          style={{
-            width: "100%",
-            padding: "20px 20px 0 20px",
-            boxSizing: "border-box",
-            background: "#FAF7F2",
-          }}
-        >
+        <section className="mx-auto max-w-6xl px-6 pt-8 pb-20">
           <div
-            className="hero-card"
-            style={{
-              maxWidth: 1600,
-              width: "100%",
-              margin: "0 auto",
-              borderRadius: 20,
-              overflow: "hidden",
-              position: "relative",
-              aspectRatio: "1424 / 848",
-            }}
+            className="relative overflow-hidden rounded-[20px]"
+            style={{ minHeight: 860 }}
           >
-            <div
+            <img
+              src="https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=1600&q=85&auto=format&fit=crop"
+              alt=""
+              aria-hidden="true"
               style={{
                 position: "absolute",
                 inset: 0,
                 width: "100%",
                 height: "100%",
-                borderRadius: "inherit",
+                objectFit: "cover",
+                objectPosition: "center",
+                pointerEvents: "none",
+                userSelect: "none",
               }}
-            >
-              <img
-                src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=1600&q=90&auto=format&fit=crop"
-                alt=""
-                aria-hidden="true"
-                style={{
-                  display: "block",
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  objectPosition: "center",
-                  borderRadius: "inherit",
-                }}
-              />
-            </div>
+            />
             <div
               aria-hidden="true"
               style={{
@@ -149,31 +125,21 @@ const Index = () => {
                 inset: 0,
                 pointerEvents: "none",
                 background:
-                  "linear-gradient(to bottom, rgba(250,247,242,0.10) 0%, rgba(250,247,242,0.05) 40%, rgba(250,247,242,0.30) 100%)",
+                  "linear-gradient(to bottom, rgba(15,15,15,0.65) 0%, rgba(15,15,15,0.45) 50%, rgba(15,15,15,0.7) 100%)",
               }}
             />
             <div
-              className="hero-content"
-              style={{
-                position: "absolute",
-                inset: 0,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "48px 24px",
-                textAlign: "center",
-                zIndex: 10,
-              }}
+              className="relative mx-auto max-w-3xl px-6 text-center"
+              style={{ zIndex: 10, paddingTop: 100, paddingBottom: 80 }}
             >
-          <span className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium" style={{ backgroundColor: "rgba(255,255,255,0.7)", color: "#1A1A2E", backdropFilter: "blur(4px)" }}>
-            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#0D9488" }} />
+          <span className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium" style={{ backgroundColor: "rgba(255,255,255,0.15)", color: "#ffffff", backdropFilter: "blur(4px)" }}>
+            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#5EEAD4" }} />
             For LSAT self-studiers
           </span>
-          <h1 className="mt-6 text-5xl font-extrabold tracking-tight md:text-6xl md:leading-[1.05]" style={{ color: "#1A1A2E", textShadow: "0 1px 3px rgba(250,247,242,0.6)" }}>
+          <h1 className="mt-6 text-5xl font-extrabold tracking-tight text-white md:text-6xl md:leading-[1.05]">
             Your plateau-to-breakthrough study guide.
           </h1>
-          <p className="mx-auto mt-6 max-w-xl text-lg" style={{ color: "rgba(26,26,46,0.8)", textShadow: "0 1px 3px rgba(250,247,242,0.6)" }}>
+          <p className="mx-auto mt-6 max-w-xl text-lg" style={{ color: "rgba(255,255,255,0.85)" }}>
             Score-matched resources, powered by students who broke through the same wall.
           </p>
           <form
@@ -212,7 +178,7 @@ const Index = () => {
           </form>
           <p
             className="mt-3 text-center"
-            style={{ color: "rgba(26,26,46,0.7)", fontSize: "0.8rem" }}
+            style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.8rem" }}
           >
             Free for 14 days. No credit card required.
           </p>
