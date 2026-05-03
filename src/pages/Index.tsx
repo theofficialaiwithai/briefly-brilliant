@@ -507,7 +507,7 @@ const Index = () => {
                 Premium
               </span>
               <h3 className="mt-2 font-bold" style={{ color: "#1A1A2E", fontSize: "2rem" }}>
-                $149
+                $249
                 <span style={{ color: "#9CA3AF", fontSize: "0.9rem", fontWeight: 400 }}>
                   {" "}/lifetime
                 </span>
