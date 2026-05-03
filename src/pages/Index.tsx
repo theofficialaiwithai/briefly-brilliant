@@ -8,6 +8,8 @@ import {
   Users,
   Tag,
   RefreshCw,
+  Star,
+  ThumbsUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
@@ -146,7 +148,7 @@ const Index = () => {
                 Everything you need to find your breakthrough resource.
               </h2>
               <p className="mt-5 text-base text-muted-foreground">
-                The best LSAT study content already exists. Test Briefs is the
+                The best LSAT study content already exists. Briefly Brilliant is the
                 layer that finally makes it findable.
               </p>
             </div>
@@ -173,6 +175,74 @@ const Index = () => {
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                     {f.body}
                   </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Community section */}
+        <section className="mx-auto max-w-6xl px-6 pb-16">
+          <div
+            className="rounded-[20px] p-10 text-white md:p-16"
+            style={{ backgroundColor: "#0F0F0F" }}
+          >
+            <span
+              className="text-xs font-semibold uppercase tracking-[0.18em]"
+              style={{ color: "#0D9488" }}
+            >
+              Community
+            </span>
+            <h2 className="mt-4 max-w-3xl text-[2.5rem] font-bold leading-tight text-white">
+              Built by students. Made smarter by every score.
+            </h2>
+            <p className="mt-4 text-base text-white/60">
+              Three features no LSAT platform has ever combined.
+            </p>
+
+            <div className="mt-12 grid gap-10 md:grid-cols-3 md:gap-8">
+              {[
+                {
+                  icon: Star,
+                  bg: "#7C6FF7",
+                  title: "Score Journey Stories",
+                  body: "Real students share what broke their plateau. Every story is a roadmap for the next person.",
+                  link: "/stories",
+                  cta: "Browse stories →",
+                },
+                {
+                  icon: ThumbsUp,
+                  bg: "#4ADE80",
+                  title: "Worth It? ratings",
+                  body: "Every resource rated by students at your score range. Know what's worth your time before you start.",
+                  link: "/feed",
+                  cta: "See rated resources →",
+                },
+                {
+                  icon: Users,
+                  bg: "#FB923C",
+                  title: "Community Study Groups",
+                  body: "Find students at your exact plateau. Study together and hold each other accountable.",
+                  link: "/groups",
+                  cta: "Find a group →",
+                },
+              ].map((c) => (
+                <div key={c.title}>
+                  <span
+                    className="flex h-12 w-12 items-center justify-center rounded-xl text-white"
+                    style={{ backgroundColor: c.bg }}
+                  >
+                    <c.icon className="h-5 w-5" />
+                  </span>
+                  <h3 className="mt-6 text-lg font-bold text-white">{c.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-white/60">{c.body}</p>
+                  <Link
+                    to={c.link}
+                    className="mt-4 inline-block text-sm font-semibold"
+                    style={{ color: "#0D9488" }}
+                  >
+                    {c.cta}
+                  </Link>
                 </div>
               ))}
             </div>

@@ -8,7 +8,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Test Briefs — warm, Notion-inspired */
+    /* Briefly Brilliant — warm, Notion-inspired */
     --background: 48 33% 97%;          /* #FAFAF8 off-white */
     --foreground: 240 30% 14%;         /* #1A1A2E dark slate */
 
