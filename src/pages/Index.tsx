@@ -186,93 +186,125 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Section B — Features */}
-        <section className="px-6 pb-24">
+        {/* Section B — Features (open layout) */}
+        <section style={{ backgroundColor: "#FAF7F2", padding: "80px 24px" }}>
+          <div className="text-center">
+            <h2 style={{ color: "#1A1A2E", fontSize: "2.25rem" }} className="font-bold">
+              Not your average study tool
+            </h2>
+            <p
+              className="mx-auto mt-4"
+              style={{ color: "#6B7280", fontSize: "1rem", maxWidth: 560 }}
+            >
+              Carefully built for LSAT self-studiers who are done with generic advice and want resources that actually match where they are.
+            </p>
+          </div>
           <div
-            className="mx-auto overflow-hidden my-12"
-            style={{
-              maxWidth: 900,
-              borderRadius: 20,
-              boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-            }}
+            className="mx-auto mt-14 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
+            style={{ maxWidth: 860, columnGap: 48, rowGap: 56 }}
           >
-            <div
-              style={{
-                backgroundColor: "#0D9488",
-                padding: "20px 32px",
-              }}
-              className="text-center"
-            >
-              <h2 className="font-bold text-white" style={{ fontSize: "1.5rem" }}>
-                App Features
-              </h2>
-            </div>
-            <div
-              style={{ backgroundColor: "#FFFFFF", padding: "48px 40px" }}
-            >
-              <div className="text-center">
+            {features.map((f) => (
+              <div key={f.title} className="flex flex-col items-center text-center">
+                <span style={{ fontSize: 52, display: "block", marginBottom: 14, lineHeight: 1 }}>
+                  {f.emoji}
+                </span>
                 <h3
-                  className="font-bold"
-                  style={{ color: "#1A1A2E", fontSize: "1.4rem" }}
+                  style={{
+                    color: "#1A1A2E",
+                    fontSize: "1.05rem",
+                    fontWeight: 600,
+                    marginBottom: 8,
+                    fontFamily: "'Playfair Display', serif",
+                  }}
                 >
-                  Why students choose Briefly Brilliant
+                  {f.title}
                 </h3>
+                {f.comingSoon && (
+                  <span
+                    style={{
+                      backgroundColor: "#F3F4F6",
+                      color: "#9CA3AF",
+                      fontSize: 10,
+                      padding: "3px 10px",
+                      borderRadius: 99,
+                      marginBottom: 8,
+                    }}
+                  >
+                    Coming Soon
+                  </span>
+                )}
                 <p
-                  className="mt-2 mx-auto max-w-xl"
-                  style={{ color: "#6B7280", fontSize: "0.9rem" }}
+                  style={{
+                    color: "#6B7280",
+                    fontSize: "0.875rem",
+                    lineHeight: 1.6,
+                    maxWidth: 220,
+                  }}
                 >
-                  Score-matched resources, community signals, and a study system that gets smarter with every use.
+                  {f.body}
                 </p>
               </div>
-              <div
-                className="mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
-                style={{ columnGap: 32, rowGap: 40 }}
-              >
-                {features.map((f) => (
+            ))}
+          </div>
+        </section>
+
+        {/* Why we built this */}
+        <section style={{ backgroundColor: "#FAF7F2", padding: "80px 24px" }}>
+          <div className="mx-auto text-center" style={{ maxWidth: 600 }}>
+            <span
+              style={{
+                color: "#0D9488",
+                fontSize: "0.75rem",
+                letterSpacing: "0.1em",
+                fontWeight: 600,
+              }}
+            >
+              OUR STORY
+            </span>
+            <h2
+              className="mx-auto font-bold"
+              style={{ color: "#1A1A2E", fontSize: "2rem", maxWidth: 600, marginTop: 12 }}
+            >
+              The best LSAT resources are free. The problem is finding the right one.
+            </h2>
+          </div>
+          <div
+            className="mx-auto mt-8 text-center"
+            style={{ maxWidth: 560, color: "#4B5563", fontSize: "1rem", lineHeight: 1.8 }}
+          >
+            <p>
+              7Sage walkthroughs. Khan Academy modules. Reddit strategy threads. YouTube breakdowns. The resources that have helped students go from 152 to 176 are out there — and they're completely free.
+            </p>
+            <p className="mt-5">
+              The problem is that there are thousands of them and no system matching the right resource to the right student at the right plateau. A student stuck at 158 on Logic Games needs different material than a student stuck at 168. Both end up searching the same forums and getting the same generic advice.
+            </p>
+            <p className="mt-5" style={{ color: "#0D9488", fontStyle: "italic" }}>
+              Briefly Brilliant was built to fix that. Every score movement reported back to the platform makes the matching smarter. The students who come after you benefit from every resource you complete — and every one you skip.
+            </p>
+          </div>
+          <div className="mx-auto mt-10 flex items-center justify-center gap-6 text-center">
+            {[
+              { n: "6 min", l: "avg. quiz time" },
+              { n: "12+", l: "curated sources" },
+              { n: "Free", l: "to get started" },
+            ].map((s, i) => (
+              <div key={s.l} className="flex items-center gap-6">
+                {i > 0 && <span style={{ color: "#D1D5DB" }}>|</span>}
+                <div>
                   <div
-                    key={f.title}
-                    className="flex flex-col items-center text-center"
-                    style={{ opacity: f.comingSoon ? 0.5 : 1 }}
+                    style={{
+                      color: "#1A1A2E",
+                      fontSize: "1.5rem",
+                      fontWeight: 700,
+                      fontFamily: "'Playfair Display', serif",
+                    }}
                   >
-                    <f.icon size={28} style={{ color: "#0D9488" }} />
-                    <h4
-                      style={{
-                        color: "#1A1A2E",
-                        fontSize: "0.95rem",
-                        fontWeight: 600,
-                        marginTop: 10,
-                      }}
-                    >
-                      {f.title}
-                    </h4>
-                    {f.comingSoon && (
-                      <span
-                        className="mt-1 inline-block"
-                        style={{
-                          backgroundColor: "#F3F4F6",
-                          color: "#6B7280",
-                          fontSize: 10,
-                          padding: "2px 8px",
-                          borderRadius: 99,
-                        }}
-                      >
-                        Coming Soon
-                      </span>
-                    )}
-                    <p
-                      className="mt-2"
-                      style={{
-                        color: "#6B7280",
-                        fontSize: "0.85rem",
-                        lineHeight: 1.5,
-                      }}
-                    >
-                      {f.body}
-                    </p>
+                    {s.n}
                   </div>
-                ))}
+                  <div style={{ color: "#6B7280", fontSize: "0.8rem" }}>{s.l}</div>
+                </div>
               </div>
-            </div>
+            ))}
           </div>
         </section>
 
