@@ -450,7 +450,7 @@ const Index = () => {
                 Free
               </h3>
               <p style={{ color: "#6B7280", fontSize: "0.85rem" }} className="mt-1">
-                Full access for 30 days
+                Full access for 14 days
               </p>
               <hr className="my-5" style={{ borderColor: "#E5E7EB" }} />
               <p style={{ color: "#1A1A2E", fontSize: "0.85rem", fontWeight: 600 }}>
