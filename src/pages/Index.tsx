@@ -8,6 +8,8 @@ import {
   Users,
   Tag,
   RefreshCw,
+  Star,
+  ThumbsUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
