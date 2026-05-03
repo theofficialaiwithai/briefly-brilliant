@@ -10,6 +10,9 @@ import {
   RefreshCw,
   Star,
   ThumbsUp,
+  Crosshair,
+  GraduationCap,
+  CalendarDays,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
@@ -37,24 +40,37 @@ const steps = [
 
 const features = [
   {
-    icon: Target,
-    title: "Score-matched resources",
-    body: "Every recommendation is calibrated to where you actually are — not where you want to be.",
+    icon: Crosshair,
+    title: "Resource matching",
+    body: "Every recommendation calibrated to your exact score and section — not generic advice that fits everyone and no one.",
+  },
+  {
+    icon: Star,
+    title: "Score Journey Stories",
+    body: "Browse real student breakthroughs tagged by score range. Every story is a roadmap for the next person.",
+  },
+  {
+    icon: ThumbsUp,
+    title: "Worth It? ratings",
+    body: "Community ratings on every resource from students who completed them at your exact score range.",
   },
   {
     icon: Users,
-    title: "Community-powered rankings",
-    body: "Resources rise to the top based on what students at your score range report actually working.",
+    title: "Community Study Groups",
+    body: "Find students at your plateau, study together, and hold each other accountable.",
+    comingSoon: true,
   },
   {
-    icon: Tag,
-    title: "Free and paid, all in one place",
-    body: "Filter by budget. From free Reddit threads to full prep courses — ranked by what gets results.",
+    icon: GraduationCap,
+    title: "LSAT tutor discovery",
+    body: "Get matched to tutors rated by students who broke through your exact plateau.",
+    comingSoon: true,
   },
   {
-    icon: RefreshCw,
-    title: "Skips teach the algorithm too",
-    body: "Resources students skip are as informative as ones they complete. The matching gets smarter with every interaction.",
+    icon: CalendarDays,
+    title: "Personalized study sequence",
+    body: "A week-by-week study plan built from your quiz results, updated as your scores move.",
+    comingSoon: true,
   },
 ];
 
@@ -129,54 +145,91 @@ const Index = () => {
         </section>
 
         {/* Section B — Features */}
-        <section
-          className="px-6 pb-24"
-          style={{ backgroundColor: "#FAFAF8" }}
-        >
-          <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-2 md:gap-16">
-            <div>
-              <span
-                className="text-xs font-semibold uppercase tracking-[0.18em]"
-                style={{ color: "#0D9488" }}
-              >
-                Features
-              </span>
-              <h2
-                className="mt-4 text-3xl font-bold leading-tight md:text-4xl"
-                style={{ color: "#1A1A2E" }}
-              >
-                Everything you need to find your breakthrough resource.
+        <section className="px-6 pb-24">
+          <div
+            className="mx-auto overflow-hidden my-12"
+            style={{
+              maxWidth: 900,
+              borderRadius: 20,
+              boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: "#0D9488",
+                padding: "20px 32px",
+              }}
+              className="text-center"
+            >
+              <h2 className="font-bold text-white" style={{ fontSize: "1.5rem" }}>
+                App Features
               </h2>
-              <p className="mt-5 text-base text-muted-foreground">
-                The best LSAT study content already exists. Briefly Brilliant is the
-                layer that finally makes it findable.
-              </p>
             </div>
-
-            <div className="grid gap-5 sm:grid-cols-2">
-              {features.map((f) => (
-                <div
-                  key={f.title}
-                  className="rounded-2xl border bg-white p-6 shadow-card"
-                  style={{ borderColor: "#E5E7EB" }}
+            <div
+              style={{ backgroundColor: "#FFFFFF", padding: "48px 40px" }}
+            >
+              <div className="text-center">
+                <h3
+                  className="font-bold"
+                  style={{ color: "#1A1A2E", fontSize: "1.4rem" }}
                 >
-                  <span
-                    className="flex h-11 w-11 items-center justify-center rounded-full"
-                    style={{ backgroundColor: "#EDE9FE" }}
+                  Why students choose Briefly Brilliant
+                </h3>
+                <p
+                  className="mt-2 mx-auto max-w-xl"
+                  style={{ color: "#6B7280", fontSize: "0.9rem" }}
+                >
+                  Score-matched resources, community signals, and a study system that gets smarter with every use.
+                </p>
+              </div>
+              <div
+                className="mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
+                style={{ columnGap: 32, rowGap: 40 }}
+              >
+                {features.map((f) => (
+                  <div
+                    key={f.title}
+                    className="flex flex-col items-center text-center"
+                    style={{ opacity: f.comingSoon ? 0.5 : 1 }}
                   >
-                    <f.icon className="h-5 w-5" style={{ color: "#7C6FF7" }} />
-                  </span>
-                  <h3
-                    className="mt-5 text-base font-bold"
-                    style={{ color: "#1A1A2E" }}
-                  >
-                    {f.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                    {f.body}
-                  </p>
-                </div>
-              ))}
+                    <f.icon size={28} style={{ color: "#0D9488" }} />
+                    <h4
+                      style={{
+                        color: "#1A1A2E",
+                        fontSize: "0.95rem",
+                        fontWeight: 600,
+                        marginTop: 10,
+                      }}
+                    >
+                      {f.title}
+                    </h4>
+                    {f.comingSoon && (
+                      <span
+                        className="mt-1 inline-block"
+                        style={{
+                          backgroundColor: "#F3F4F6",
+                          color: "#6B7280",
+                          fontSize: 10,
+                          padding: "2px 8px",
+                          borderRadius: 99,
+                        }}
+                      >
+                        Coming Soon
+                      </span>
+                    )}
+                    <p
+                      className="mt-2"
+                      style={{
+                        color: "#6B7280",
+                        fontSize: "0.85rem",
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {f.body}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
