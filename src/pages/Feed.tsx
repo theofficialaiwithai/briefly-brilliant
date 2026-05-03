@@ -337,12 +337,12 @@ const Feed = () => {
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <Logo />
-          <Link
-            to="/quiz"
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            Retake quiz
-          </Link>
+          <nav className="flex items-center gap-6 text-sm text-muted-foreground">
+            <Link to="/feed" className="hover:text-foreground">Feed</Link>
+            <Link to="/stories" className="hover:text-foreground">Stories</Link>
+            <Link to="/groups" className="hover:text-foreground">Study Groups</Link>
+            <Link to="/quiz" className="hover:text-foreground">Retake quiz</Link>
+          </nav>
         </div>
       </header>
 
