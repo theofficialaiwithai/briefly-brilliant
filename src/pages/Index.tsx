@@ -101,7 +101,7 @@ const Index = () => {
         <section className="mx-auto max-w-6xl px-6 pt-8 pb-20">
           <div
             className="relative overflow-hidden rounded-[20px]"
-            style={{ minHeight: 680 }}
+            style={{ minHeight: 860 }}
           >
             <img
               src="https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=1600&q=85&auto=format&fit=crop"
