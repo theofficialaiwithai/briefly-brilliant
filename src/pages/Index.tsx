@@ -285,7 +285,7 @@ const Index = () => {
           <div className="mx-auto mt-10 flex items-center justify-center gap-6 text-center">
             {[
               { n: "6 min", l: "avg. quiz time" },
-              { n: "12+", l: "curated sources" },
+              { n: "300+", l: "curated sources" },
               { n: "Free", l: "to get started" },
             ].map((s, i) => (
               <div key={s.l} className="flex items-center gap-6">
@@ -520,7 +520,7 @@ const Index = () => {
             className="font-bold"
             style={{ color: "#1A1A2E", fontSize: "1.75rem" }}
           >
-            12+ resources. All in one place.
+            300+ resources. All in one place.
           </h2>
           <p
             className="mx-auto mt-3"
@@ -539,7 +539,7 @@ const Index = () => {
               lineHeight: 1,
             }}
           >
-            12
+            300+
           </div>
           <div className="mt-2" style={{ color: "#6B7280", fontSize: "0.85rem" }}>
             curated sources, growing every month
