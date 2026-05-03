@@ -4,15 +4,10 @@ import {
   ClipboardList,
   Sparkles,
   TrendingUp,
-  Target,
   Users,
-  Tag,
-  RefreshCw,
   Star,
   ThumbsUp,
-  Crosshair,
-  GraduationCap,
-  CalendarDays,
+  ArrowUpRight,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 
@@ -39,36 +34,36 @@ const steps = [
 
 const features = [
   {
-    icon: Crosshair,
+    emoji: "🎯",
     title: "Resource matching",
-    body: "Every recommendation calibrated to your exact score and section — not generic advice that fits everyone and no one.",
+    body: "Every recommendation calibrated to your exact score and section — not generic advice built for everyone.",
   },
   {
-    icon: Star,
+    emoji: "⭐",
     title: "Score Journey Stories",
-    body: "Browse real student breakthroughs tagged by score range. Every story is a roadmap for the next person.",
+    body: "Browse real student breakthroughs by score range. Every story is a roadmap for the next person.",
   },
   {
-    icon: ThumbsUp,
+    emoji: "👍",
     title: "Worth It? ratings",
-    body: "Community ratings on every resource from students who completed them at your exact score range.",
+    body: "Community ratings on every resource — free and paid — from students who completed them at your score range.",
   },
   {
-    icon: Users,
+    emoji: "👥",
     title: "Community Study Groups",
     body: "Find students at your plateau, study together, and hold each other accountable.",
     comingSoon: true,
   },
   {
-    icon: GraduationCap,
+    emoji: "🎓",
     title: "LSAT tutor discovery",
     body: "Get matched to tutors rated by students who broke through your exact plateau.",
     comingSoon: true,
   },
   {
-    icon: CalendarDays,
+    emoji: "📅",
     title: "Personalized study sequence",
-    body: "A week-by-week study plan built from your quiz results, updated as your scores move.",
+    body: "A week-by-week study plan built from your quiz results, updated as your scores improve.",
     comingSoon: true,
   },
 ];
