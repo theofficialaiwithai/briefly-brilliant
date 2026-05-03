@@ -1,7 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import {
-  ArrowRight,
   ClipboardList,
   Sparkles,
   TrendingUp,
@@ -15,7 +14,6 @@ import {
   GraduationCap,
   CalendarDays,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 
 const steps = [
