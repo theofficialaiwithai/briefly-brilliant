@@ -9,7 +9,7 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Briefly Brilliant — warm, Notion-inspired */
-    --background: 48 33% 97%;          /* #FAFAF8 off-white */
+    --background: 38 50% 97%;          /* #FAF7F2 warm ivory */
     --foreground: 240 30% 14%;         /* #1A1A2E dark slate */
 
     --card: 0 0% 100%;
@@ -40,8 +40,8 @@ All colors MUST be HSL.
 
     --radius: 0.875rem;
 
-    --shadow-card: 0 1px 2px hsl(240 30% 14% / 0.04), 0 4px 16px hsl(240 30% 14% / 0.04);
-    --shadow-card-hover: 0 2px 4px hsl(240 30% 14% / 0.06), 0 12px 28px hsl(240 30% 14% / 0.08);
+    --shadow-card: 0 2px 20px rgba(0,0,0,0.06);
+    --shadow-card-hover: 0 4px 28px rgba(0,0,0,0.08);
 
     --sidebar-background: 0 0% 98%;
 
@@ -106,5 +106,9 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  h1, h2 {
+    font-family: 'Playfair Display', ui-serif, Georgia, serif;
   }
 }

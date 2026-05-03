@@ -1,6 +1,6 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import {
-  ArrowRight,
   ClipboardList,
   Sparkles,
   TrendingUp,
@@ -14,7 +14,6 @@ import {
   GraduationCap,
   CalendarDays,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 
 const steps = [
@@ -75,16 +74,32 @@ const features = [
 ];
 
 const Index = () => {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <Logo />
-        <Link
-          to="/quiz"
-          className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-        >
-          Get started
-        </Link>
+        <nav className="flex items-center gap-2">
+          <Link
+            to="/auth"
+            className="text-[0.9rem] font-medium px-4 py-2"
+            style={{ color: "#1A1A2E" }}
+          >
+            Log in
+          </Link>
+          <Link
+            to="/auth?mode=signup"
+            className="text-[0.9rem] font-medium text-white"
+            style={{
+              backgroundColor: "#0D9488",
+              borderRadius: 99,
+              padding: "8px 20px",
+            }}
+          >
+            Sign up
+          </Link>
+        </nav>
       </header>
 
       <main>
@@ -99,14 +114,46 @@ const Index = () => {
           <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
             Score-matched resources, powered by students who broke through the same wall.
           </p>
-          <div className="mt-10 flex justify-center">
-            <Button asChild size="lg" className="h-12 rounded-xl px-6 text-base shadow-card">
-              <Link to="/quiz">
-                Find My Resources
-                <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              navigate("/quiz");
+            }}
+            className="mx-auto mt-10 flex w-full max-w-md items-center bg-white"
+            style={{
+              border: "1px solid #E5E7EB",
+              borderRadius: 99,
+              padding: "6px 6px 6px 20px",
+            }}
+          >
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+              className="flex-1 bg-transparent outline-none border-0"
+              style={{ fontSize: "0.95rem" }}
+            />
+            <button
+              type="submit"
+              className="text-white font-medium"
+              style={{
+                backgroundColor: "#0D9488",
+                borderRadius: 99,
+                padding: "10px 24px",
+                fontSize: "0.9rem",
+              }}
+            >
+              Get Matched →
+            </button>
+          </form>
+          <p
+            className="mt-3 text-center"
+            style={{ color: "#9CA3AF", fontSize: "0.8rem" }}
+          >
+            Free for 14 days. No credit card required.
+          </p>
         </section>
 
         {/* Section A — How It Works (dark) */}
@@ -298,6 +345,142 @@ const Index = () => {
                   </Link>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Pricing */}
+        <section
+          style={{
+            background: "linear-gradient(to bottom, #EAF6F3, #FAF7F2)",
+            padding: "80px 0",
+          }}
+        >
+          <div className="mx-auto px-6 text-center" style={{ maxWidth: 720 }}>
+            <h2 style={{ fontSize: "1.8rem", color: "#1A1A2E" }} className="font-bold">
+              Simple, honest pricing
+            </h2>
+            <p style={{ color: "#6B7280", fontSize: "0.9rem" }} className="mt-3">
+              Start free. Upgrade when you're ready. Own it forever.
+            </p>
+          </div>
+          <div
+            className="mx-auto mt-10 grid gap-5 px-6 md:grid-cols-2"
+            style={{ maxWidth: 680 }}
+          >
+            {/* Free */}
+            <div
+              className="bg-white flex flex-col"
+              style={{
+                border: "1px solid #E5E7EB",
+                borderRadius: 16,
+                padding: 32,
+              }}
+            >
+              <span
+                className="uppercase"
+                style={{ fontSize: "0.75rem", color: "#9CA3AF", letterSpacing: "0.08em" }}
+              >
+                Standard
+              </span>
+              <h3 className="mt-2 font-bold" style={{ color: "#1A1A2E", fontSize: "2rem" }}>
+                Free
+              </h3>
+              <p style={{ color: "#6B7280", fontSize: "0.85rem" }} className="mt-1">
+                Full access for 14 days, no card needed.
+              </p>
+              <hr className="my-5" style={{ borderColor: "#E5E7EB" }} />
+              <p style={{ color: "#1A1A2E", fontSize: "0.85rem", fontWeight: 600 }}>
+                What's included:
+              </p>
+              <ul className="mt-3 space-y-1" style={{ lineHeight: 1.8 }}>
+                {["Resource matching", "Score Journey Stories", "Worth It? ratings"].map((i) => (
+                  <li key={i} className="flex items-center gap-2" style={{ color: "#6B7280", fontSize: "0.875rem" }}>
+                    <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#0D9488" }} />
+                    {i}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                to="/auth"
+                className="mt-6 block text-center font-semibold"
+                style={{
+                  border: "1.5px solid #0D9488",
+                  color: "#0D9488",
+                  borderRadius: 8,
+                  padding: 12,
+                }}
+              >
+                Start Free Trial
+              </Link>
+            </div>
+
+            {/* Lifetime */}
+            <div
+              className="bg-white flex flex-col relative"
+              style={{
+                border: "2px solid #0D9488",
+                borderRadius: 16,
+                padding: 32,
+              }}
+            >
+              <span
+                className="absolute text-white"
+                style={{
+                  top: 16,
+                  right: 16,
+                  backgroundColor: "#0D9488",
+                  fontSize: 10,
+                  padding: "4px 10px",
+                  borderRadius: 99,
+                }}
+              >
+                Best Value
+              </span>
+              <span
+                className="uppercase"
+                style={{ fontSize: "0.75rem", color: "#9CA3AF", letterSpacing: "0.08em" }}
+              >
+                Premium
+              </span>
+              <h3 className="mt-2 font-bold" style={{ color: "#1A1A2E", fontSize: "2rem" }}>
+                $49
+                <span style={{ color: "#9CA3AF", fontSize: "0.9rem", fontWeight: 400 }}>
+                  {" "}/lifetime
+                </span>
+              </h3>
+              <p style={{ color: "#6B7280", fontSize: "0.85rem" }} className="mt-1">
+                One payment. Every feature. Forever.
+              </p>
+              <hr className="my-5" style={{ borderColor: "#E5E7EB" }} />
+              <p style={{ color: "#1A1A2E", fontSize: "0.85rem", fontWeight: 600 }}>
+                What's included:
+              </p>
+              <ul className="mt-3 space-y-1" style={{ lineHeight: 1.8 }}>
+                {[
+                  "Everything in Free",
+                  "Community Study Groups",
+                  "LSAT tutor discovery",
+                  "Personalized study sequence",
+                  "All future features included",
+                ].map((i) => (
+                  <li key={i} className="flex items-center gap-2" style={{ color: "#6B7280", fontSize: "0.875rem" }}>
+                    <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#0D9488" }} />
+                    {i}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                to="/auth?plan=lifetime"
+                className="mt-6 block text-center text-white font-semibold"
+                style={{
+                  backgroundColor: "#0D9488",
+                  borderRadius: 8,
+                  padding: 12,
+                }}
+              >
+                Get Lifetime Access
+              </Link>
             </div>
           </div>
         </section>
