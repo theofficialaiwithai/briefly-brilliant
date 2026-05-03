@@ -98,48 +98,48 @@ const Index = () => {
       </header>
 
       <main>
-        <section
-          className="relative overflow-hidden"
-          style={{ minHeight: 680, backgroundColor: "#FAF7F2" }}
-        >
-          <img
-            src="https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=1600&q=85&auto=format&fit=crop"
-            alt=""
-            aria-hidden="true"
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              width: "100%",
-              height: "60%",
-              objectFit: "cover",
-              objectPosition: "center top",
-              pointerEvents: "none",
-              userSelect: "none",
-            }}
-          />
+        <section className="mx-auto max-w-6xl px-6 pt-8 pb-20">
           <div
-            aria-hidden="true"
-            style={{
-              position: "absolute",
-              inset: 0,
-              pointerEvents: "none",
-              background:
-                "linear-gradient(to bottom, #FAF7F2 0%, #FAF7F2 30%, rgba(250,247,242,0.85) 45%, rgba(250,247,242,0.3) 65%, rgba(250,247,242,0) 100%)",
-            }}
-          />
-          <div
-            className="relative mx-auto max-w-3xl px-6 text-center"
-            style={{ zIndex: 10, paddingTop: 100, paddingBottom: 80 }}
+            className="relative overflow-hidden rounded-[20px]"
+            style={{ minHeight: 680 }}
           >
-          <span className="inline-flex items-center gap-2 rounded-full bg-primary-soft px-3 py-1 text-xs font-medium text-primary">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+            <img
+              src="https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=1600&q=85&auto=format&fit=crop"
+              alt=""
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                objectPosition: "center",
+                pointerEvents: "none",
+                userSelect: "none",
+              }}
+            />
+            <div
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                inset: 0,
+                pointerEvents: "none",
+                background:
+                  "linear-gradient(to bottom, rgba(15,15,15,0.65) 0%, rgba(15,15,15,0.45) 50%, rgba(15,15,15,0.7) 100%)",
+              }}
+            />
+            <div
+              className="relative mx-auto max-w-3xl px-6 text-center"
+              style={{ zIndex: 10, paddingTop: 100, paddingBottom: 80 }}
+            >
+          <span className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium" style={{ backgroundColor: "rgba(255,255,255,0.15)", color: "#ffffff", backdropFilter: "blur(4px)" }}>
+            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#5EEAD4" }} />
             For LSAT self-studiers
           </span>
-          <h1 className="mt-6 text-5xl font-extrabold tracking-tight text-foreground md:text-6xl md:leading-[1.05]">
+          <h1 className="mt-6 text-5xl font-extrabold tracking-tight text-white md:text-6xl md:leading-[1.05]">
             Your plateau-to-breakthrough study guide.
           </h1>
-          <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
+          <p className="mx-auto mt-6 max-w-xl text-lg" style={{ color: "rgba(255,255,255,0.85)" }}>
             Score-matched resources, powered by students who broke through the same wall.
           </p>
           <form
@@ -178,10 +178,11 @@ const Index = () => {
           </form>
           <p
             className="mt-3 text-center"
-            style={{ color: "#9CA3AF", fontSize: "0.8rem" }}
+            style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.8rem" }}
           >
             Free for 14 days. No credit card required.
           </p>
+            </div>
           </div>
         </section>
 
