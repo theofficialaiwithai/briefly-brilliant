@@ -187,40 +187,6 @@ const Index = () => {
         </section>
 
         {/* Section A — How It Works (dark) */}
-        <section className="mx-auto max-w-6xl px-6 pb-16">
-          <div
-            className="rounded-[20px] p-10 text-white md:p-16"
-            style={{ backgroundColor: "#0F0F0F" }}
-          >
-            <span
-              className="text-xs font-semibold uppercase tracking-[0.18em]"
-              style={{ color: "#0D9488" }}
-            >
-              How it works
-            </span>
-            <h2 className="mt-4 max-w-2xl text-4xl font-bold leading-tight text-white md:text-5xl">
-              Three steps from plateau to breakthrough.
-            </h2>
-
-            <div className="mt-12 grid gap-10 md:grid-cols-3 md:gap-8">
-              {steps.map((s) => (
-                <div key={s.title}>
-                  <span
-                    className="flex h-12 w-12 items-center justify-center rounded-xl text-white"
-                    style={{ backgroundColor: s.bg }}
-                  >
-                    <s.icon className="h-5 w-5" />
-                  </span>
-                  <h3 className="mt-6 text-lg font-bold text-white">{s.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-white/60">
-                    {s.body}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* Section B — Features (open layout) */}
         <section style={{ backgroundColor: "#FAF7F2", padding: "80px 24px" }}>
           <div className="text-center">
@@ -280,6 +246,41 @@ const Index = () => {
                 </p>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* Section A — How It Works (dark) */}
+        <section className="mx-auto max-w-6xl px-6 pb-16">
+          <div
+            className="rounded-[20px] p-10 text-white md:p-16"
+            style={{ backgroundColor: "#0F0F0F" }}
+          >
+            <span
+              className="text-xs font-semibold uppercase tracking-[0.18em]"
+              style={{ color: "#0D9488" }}
+            >
+              How it works
+            </span>
+            <h2 className="mt-4 max-w-2xl text-4xl font-bold leading-tight text-white md:text-5xl">
+              Three steps from plateau to breakthrough.
+            </h2>
+
+            <div className="mt-12 grid gap-10 md:grid-cols-3 md:gap-8">
+              {steps.map((s) => (
+                <div key={s.title}>
+                  <span
+                    className="flex h-12 w-12 items-center justify-center rounded-xl text-white"
+                    style={{ backgroundColor: s.bg }}
+                  >
+                    <s.icon className="h-5 w-5" />
+                  </span>
+                  <h3 className="mt-6 text-lg font-bold text-white">{s.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-white/60">
+                    {s.body}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
