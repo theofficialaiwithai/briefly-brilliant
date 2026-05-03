@@ -45,7 +45,7 @@ const features = [
   },
   {
     emoji: "👍",
-    title: "Worth It? ratings",
+    title: "Worth It? Meter",
     body: "Community ratings on every resource — free and paid — from students who completed them at your score range.",
   },
   {
@@ -376,7 +376,7 @@ const Index = () => {
                 {
                   icon: ThumbsUp,
                   bg: "#4ADE80",
-                  title: "Worth It? ratings",
+                  title: "Worth It? Meter",
                   body: "Every resource rated by students at your score range. Know what's worth your time before you start.",
                   link: "/feed",
                   cta: "See rated resources →",
@@ -457,7 +457,7 @@ const Index = () => {
                 What's included:
               </p>
               <ul className="mt-3 space-y-1" style={{ lineHeight: 1.8 }}>
-                {["Resource matching", "Score Journey Stories", "Worth It? ratings"].map((i) => (
+                {["Resource matching", "Score Journey Stories", "Worth It? Meter"].map((i) => (
                   <li key={i} className="flex items-center gap-2" style={{ color: "#6B7280", fontSize: "0.875rem" }}>
                     <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#0D9488" }} />
                     {i}
