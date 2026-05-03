@@ -56,7 +56,7 @@ const features = [
   },
   {
     emoji: "🎓",
-    title: "LSAT tutor discovery",
+    title: "Personalized Study Sequence",
     body: "Get matched to tutors rated by students who broke through your exact plateau.",
     comingSoon: true,
   },
@@ -523,7 +523,7 @@ const Index = () => {
                 {[
                   "Everything in Free",
                   "Community Study Groups",
-                  "LSAT tutor discovery",
+                  "Personalized Study Sequence",
                   "Personalized study sequence",
                   "All future features included",
                 ].map((i) => (
