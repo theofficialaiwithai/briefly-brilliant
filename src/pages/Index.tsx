@@ -286,7 +286,7 @@ const Index = () => {
 
         {/* Why we built this */}
         <section style={{ backgroundColor: "#FAF7F2", padding: "80px 24px" }}>
-          <div className="mx-auto text-center" style={{ maxWidth: 600 }}>
+          <div className="mx-auto text-center" style={{ maxWidth: 560 }}>
             <span
               style={{
                 color: "#0D9488",
@@ -299,7 +299,7 @@ const Index = () => {
             </span>
             <h2
               className="mx-auto font-bold"
-              style={{ color: "#1A1A2E", fontSize: "2rem", maxWidth: 600, marginTop: 12 }}
+              style={{ color: "#1A1A2E", fontSize: "2.25rem", maxWidth: 560, marginTop: 16 }}
             >
               The best LSAT resources are free. The problem is finding the right one.
             </h2>
