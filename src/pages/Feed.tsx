@@ -31,6 +31,17 @@ type SourceFilter = "All" | Source;
 type BandFilter = "All" | ScoreBand;
 type Sort = "upvotes" | "newest" | "beginner";
 
+const WORTH_IT: Record<string, { pct: number; count: number }> = {
+  "1": { pct: 91, count: 214 },
+  "2": { pct: 88, count: 189 },
+  "3": { pct: 85, count: 163 },
+  "4": { pct: 79, count: 301 },
+  "5": { pct: 83, count: 147 },
+  "6": { pct: 87, count: 412 },
+  "7": { pct: 82, count: 276 },
+  "8": { pct: 90, count: 534 },
+};
+
 const SECTION_FILTERS: SectionFilter[] = [
   "All",
   "Logical Reasoning",
@@ -244,6 +255,29 @@ const ResourceRow = ({ r }: { r: Resource }) => {
               Thanks — that signal helps the next student.
             </p>
           )}
+        </div>
+      )}
+
+      {WORTH_IT[r.id] && (
+        <div className="mt-4 border-t border-[#E5E7EB] pt-3">
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground">Worth it?</span>
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-primary"
+                style={{ width: `${WORTH_IT[r.id].pct}%` }}
+              />
+            </div>
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {WORTH_IT[r.id].pct}%
+            </span>
+            <span className="text-xs text-muted-foreground/80 tabular-nums">
+              ({WORTH_IT[r.id].count} students)
+            </span>
+          </div>
+          <p className="mt-1 text-[11px] text-muted-foreground/70">
+            Rated by students at this score range
+          </p>
         </div>
       )}
     </article>
