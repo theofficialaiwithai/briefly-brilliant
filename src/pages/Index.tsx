@@ -350,6 +350,142 @@ const Index = () => {
             </div>
           </div>
         </section>
+
+        {/* Pricing */}
+        <section
+          style={{
+            background: "linear-gradient(to bottom, #EAF6F3, #FAF7F2)",
+            padding: "80px 0",
+          }}
+        >
+          <div className="mx-auto px-6 text-center" style={{ maxWidth: 720 }}>
+            <h2 style={{ fontSize: "1.8rem", color: "#1A1A2E" }} className="font-bold">
+              Simple, honest pricing
+            </h2>
+            <p style={{ color: "#6B7280", fontSize: "0.9rem" }} className="mt-3">
+              Start free. Upgrade when you're ready. Own it forever.
+            </p>
+          </div>
+          <div
+            className="mx-auto mt-10 grid gap-5 px-6 md:grid-cols-2"
+            style={{ maxWidth: 680 }}
+          >
+            {/* Free */}
+            <div
+              className="bg-white flex flex-col"
+              style={{
+                border: "1px solid #E5E7EB",
+                borderRadius: 16,
+                padding: 32,
+              }}
+            >
+              <span
+                className="uppercase"
+                style={{ fontSize: "0.75rem", color: "#9CA3AF", letterSpacing: "0.08em" }}
+              >
+                Standard
+              </span>
+              <h3 className="mt-2 font-bold" style={{ color: "#1A1A2E", fontSize: "2rem" }}>
+                Free
+              </h3>
+              <p style={{ color: "#6B7280", fontSize: "0.85rem" }} className="mt-1">
+                Full access for 14 days, no card needed.
+              </p>
+              <hr className="my-5" style={{ borderColor: "#E5E7EB" }} />
+              <p style={{ color: "#1A1A2E", fontSize: "0.85rem", fontWeight: 600 }}>
+                What's included:
+              </p>
+              <ul className="mt-3 space-y-1" style={{ lineHeight: 1.8 }}>
+                {["Resource matching", "Score Journey Stories", "Worth It? ratings"].map((i) => (
+                  <li key={i} className="flex items-center gap-2" style={{ color: "#6B7280", fontSize: "0.875rem" }}>
+                    <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#0D9488" }} />
+                    {i}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                to="/auth"
+                className="mt-6 block text-center font-semibold"
+                style={{
+                  border: "1.5px solid #0D9488",
+                  color: "#0D9488",
+                  borderRadius: 8,
+                  padding: 12,
+                }}
+              >
+                Start Free Trial
+              </Link>
+            </div>
+
+            {/* Lifetime */}
+            <div
+              className="bg-white flex flex-col relative"
+              style={{
+                border: "2px solid #0D9488",
+                borderRadius: 16,
+                padding: 32,
+              }}
+            >
+              <span
+                className="absolute text-white"
+                style={{
+                  top: 16,
+                  right: 16,
+                  backgroundColor: "#0D9488",
+                  fontSize: 10,
+                  padding: "4px 10px",
+                  borderRadius: 99,
+                }}
+              >
+                Best Value
+              </span>
+              <span
+                className="uppercase"
+                style={{ fontSize: "0.75rem", color: "#9CA3AF", letterSpacing: "0.08em" }}
+              >
+                Premium
+              </span>
+              <h3 className="mt-2 font-bold" style={{ color: "#1A1A2E", fontSize: "2rem" }}>
+                $49
+                <span style={{ color: "#9CA3AF", fontSize: "0.9rem", fontWeight: 400 }}>
+                  {" "}/lifetime
+                </span>
+              </h3>
+              <p style={{ color: "#6B7280", fontSize: "0.85rem" }} className="mt-1">
+                One payment. Every feature. Forever.
+              </p>
+              <hr className="my-5" style={{ borderColor: "#E5E7EB" }} />
+              <p style={{ color: "#1A1A2E", fontSize: "0.85rem", fontWeight: 600 }}>
+                What's included:
+              </p>
+              <ul className="mt-3 space-y-1" style={{ lineHeight: 1.8 }}>
+                {[
+                  "Everything in Free",
+                  "Community Study Groups",
+                  "LSAT tutor discovery",
+                  "Personalized study sequence",
+                  "All future features included",
+                ].map((i) => (
+                  <li key={i} className="flex items-center gap-2" style={{ color: "#6B7280", fontSize: "0.875rem" }}>
+                    <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#0D9488" }} />
+                    {i}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                to="/auth?plan=lifetime"
+                className="mt-6 block text-center text-white font-semibold"
+                style={{
+                  backgroundColor: "#0D9488",
+                  borderRadius: 8,
+                  padding: 12,
+                }}
+              >
+                Get Lifetime Access
+              </Link>
+            </div>
+          </div>
+        </section>
       </main>
 
       <footer className="border-t border-border">
