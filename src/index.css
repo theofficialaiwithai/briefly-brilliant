@@ -112,3 +112,8 @@ All colors MUST be HSL.
     font-family: 'Playfair Display', ui-serif, Georgia, serif;
   }
 }
+
+@media (max-width: 767px) {
+  .hero-card { aspect-ratio: auto !important; min-height: 520px; }
+  .hero-content { padding: 32px 20px !important; }
+}
