@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import {
   ArrowRight,
   ClipboardList,
@@ -75,16 +76,32 @@ const features = [
 ];
 
 const Index = () => {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <Logo />
-        <Link
-          to="/quiz"
-          className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-        >
-          Get started
-        </Link>
+        <nav className="flex items-center gap-2">
+          <Link
+            to="/auth"
+            className="text-[0.9rem] font-medium px-4 py-2"
+            style={{ color: "#1A1A2E" }}
+          >
+            Log in
+          </Link>
+          <Link
+            to="/auth?mode=signup"
+            className="text-[0.9rem] font-medium text-white"
+            style={{
+              backgroundColor: "#0D9488",
+              borderRadius: 99,
+              padding: "8px 20px",
+            }}
+          >
+            Sign up
+          </Link>
+        </nav>
       </header>
 
       <main>
@@ -99,14 +116,46 @@ const Index = () => {
           <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
             Score-matched resources, powered by students who broke through the same wall.
           </p>
-          <div className="mt-10 flex justify-center">
-            <Button asChild size="lg" className="h-12 rounded-xl px-6 text-base shadow-card">
-              <Link to="/quiz">
-                Find My Resources
-                <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              navigate("/quiz");
+            }}
+            className="mx-auto mt-10 flex w-full max-w-md items-center bg-white"
+            style={{
+              border: "1px solid #E5E7EB",
+              borderRadius: 99,
+              padding: "6px 6px 6px 20px",
+            }}
+          >
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+              className="flex-1 bg-transparent outline-none border-0"
+              style={{ fontSize: "0.95rem" }}
+            />
+            <button
+              type="submit"
+              className="text-white font-medium"
+              style={{
+                backgroundColor: "#0D9488",
+                borderRadius: 99,
+                padding: "10px 24px",
+                fontSize: "0.9rem",
+              }}
+            >
+              Get Matched →
+            </button>
+          </form>
+          <p
+            className="mt-3 text-center"
+            style={{ color: "#9CA3AF", fontSize: "0.8rem" }}
+          >
+            Free for 14 days. No credit card required.
+          </p>
         </section>
 
         {/* Section A — How It Works (dark) */}
