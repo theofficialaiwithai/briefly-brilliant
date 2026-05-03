@@ -35,7 +35,7 @@ const steps = [
 const features = [
   {
     emoji: "🎯",
-    title: "Resource matching",
+    title: "Resource Matching",
     body: "Every recommendation calibrated to your exact score and section — not generic advice built for everyone.",
   },
   {
@@ -457,7 +457,7 @@ const Index = () => {
                 What's included:
               </p>
               <ul className="mt-3 space-y-1" style={{ lineHeight: 1.8 }}>
-                {["Resource matching", "Score Journey Stories", "Worth It? Meter"].map((i) => (
+                {["Resource Matching", "Score Journey Stories", "Worth It? Meter"].map((i) => (
                   <li key={i} className="flex items-center gap-2" style={{ color: "#6B7280", fontSize: "0.875rem" }}>
                     <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#0D9488" }} />
                     {i}
