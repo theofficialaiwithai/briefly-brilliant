@@ -545,32 +545,66 @@ const Index = () => {
             curated sources, growing every month
           </div>
         </div>
-        <div className="mx-auto mt-10" style={{ maxWidth: 760 }}>
+        <style>{`
+          @keyframes marquee-left {
+            from { transform: translateX(0); }
+            to   { transform: translateX(-50%); }
+          }
+          @keyframes marquee-right {
+            from { transform: translateX(-50%); }
+            to   { transform: translateX(0); }
+          }
+          .marquee-track {
+            overflow: hidden;
+            mask-image: linear-gradient(to right, rgba(0,0,0,0) 0%, rgb(0,0,0) 8%, rgb(0,0,0) 92%, rgba(0,0,0,0) 100%);
+            -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,0) 0%, rgb(0,0,0) 8%, rgb(0,0,0) 92%, rgba(0,0,0,0) 100%);
+          }
+          .marquee-inner { display: flex; width: max-content; will-change: transform; }
+          .marquee-inner-left  { animation: marquee-left  linear infinite; }
+          .marquee-inner-right { animation: marquee-right linear infinite; }
+          .marquee-track:hover .marquee-inner { animation-play-state: paused; }
+          .marquee-pill {
+            background: #FFFFFF;
+            border: 1px solid #E5E7EB;
+            border-radius: 99px;
+            padding: 8px 18px;
+            font-size: 0.875rem;
+            color: #1A1A2E;
+            white-space: nowrap;
+            margin: 0 8px;
+          }
+        `}</style>
+        <div className="flex flex-col" style={{ gap: 16, margin: "32px 0" }}>
           {[
-            { items: ["7Sage", "Khan Academy", "LSAT Demon", "PowerScore", "Blueprint LSAT"], offset: 0 },
-            { items: ["Reddit r/LSAT", "Nathan Fox (YouTube)", "Manhattan Prep", "Velocity LSAT"], offset: 40 },
-            { items: ["LSAC Official Prep", "Magoosh", "7Sage PT Analyzer"], offset: 80 },
+            {
+              dir: "left" as const,
+              duration: 35,
+              items: ["LSAT Demon","7Sage","Blueprint LSAT","PowerScore","Manhattan Prep","Kaplan Test Prep","Magoosh","LSATMax","TestMasters","Princeton Review","PrepScholar","Target Test Prep","Law School Admission Council (LSAC)","LawHub","Khan Academy LSAT"],
+            },
+            {
+              dir: "right" as const,
+              duration: 50,
+              items: ["The LSAT Trainer","The Loophole in LSAT Logical Reasoning","PowerScore LSAT Bible Series","LSAT Lab","LSAT Unplugged","LSAT Blog","Varsity Tutors","Wyzant","JD Advising","7Sage YouTube","LSAT Demon YouTube","Blueprint LSAT YouTube","7Sage Podcast","LSAT Demon Daily Podcast","LSAT Unplugged Podcast"],
+            },
+            {
+              dir: "left" as const,
+              duration: 40,
+              items: ["7Sage Analytics System","Blueprint Live Classes","Manhattan Prep LSAT Curriculum","Kaplan LSAT Course","Princeton Review LSAT Course","Magoosh LSAT Course","LSATMax Mobile App","TestMasters Advanced Course","PrepScholar Adaptive LSAT","Target Test Prep LSAT","LSAC Official PrepTests","LSAT Section Drills (LawHub)","7Sage PrepTests Explanations","PowerScore Forums","Reddit r/LSAT"],
+            },
           ].map((row, i) => (
-            <div
-              key={i}
-              className="flex flex-wrap justify-center gap-3 mt-3"
-              style={{ marginLeft: row.offset }}
-            >
-              {row.items.map((p) => (
-                <span
-                  key={p}
-                  style={{
-                    backgroundColor: "#FFFFFF",
-                    border: "1px solid #E5E7EB",
-                    borderRadius: 99,
-                    padding: "8px 18px",
-                    fontSize: "0.875rem",
-                    color: "#1A1A2E",
-                  }}
-                >
-                  {p}
-                </span>
-              ))}
+            <div key={i} className="marquee-track">
+              <div
+                className={`marquee-inner marquee-inner-${row.dir}`}
+                style={{ animationDuration: `${row.duration}s` }}
+              >
+                {[0, 1].map((copy) => (
+                  <div key={copy} className="flex" aria-hidden={copy === 1}>
+                    {row.items.map((p, idx) => (
+                      <span key={`${copy}-${idx}`} className="marquee-pill">{p}</span>
+                    ))}
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
         </div>
