@@ -98,7 +98,40 @@ const Index = () => {
       </header>
 
       <main>
-        <section className="mx-auto max-w-3xl px-6 pt-16 pb-24 text-center md:pt-28">
+        <section
+          className="relative overflow-hidden"
+          style={{ minHeight: 680, backgroundColor: "#FAF7F2" }}
+        >
+          <img
+            src="https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=1600&q=85&auto=format&fit=crop"
+            alt=""
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              width: "100%",
+              height: "60%",
+              objectFit: "cover",
+              objectPosition: "center top",
+              pointerEvents: "none",
+              userSelect: "none",
+            }}
+          />
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: 0,
+              pointerEvents: "none",
+              background:
+                "linear-gradient(to bottom, #FAF7F2 0%, #FAF7F2 30%, rgba(250,247,242,0.85) 45%, rgba(250,247,242,0.3) 65%, rgba(250,247,242,0) 100%)",
+            }}
+          />
+          <div
+            className="relative mx-auto max-w-3xl px-6 text-center"
+            style={{ zIndex: 10, paddingTop: 100, paddingBottom: 80 }}
+          >
           <span className="inline-flex items-center gap-2 rounded-full bg-primary-soft px-3 py-1 text-xs font-medium text-primary">
             <span className="h-1.5 w-1.5 rounded-full bg-primary" />
             For LSAT self-studiers
@@ -149,6 +182,7 @@ const Index = () => {
           >
             Free for 14 days. No credit card required.
           </p>
+          </div>
         </section>
 
         {/* Section A — How It Works (dark) */}
