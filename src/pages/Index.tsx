@@ -129,8 +129,8 @@ const Index = () => {
               }}
             />
             <div
-              className="relative mx-auto max-w-3xl px-6 text-center"
-              style={{ zIndex: 10, paddingTop: 100, paddingBottom: 80 }}
+              className="relative mx-auto flex max-w-3xl flex-col items-center justify-center px-6 text-center"
+              style={{ zIndex: 10, minHeight: 860 }}
             >
           <span className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium" style={{ backgroundColor: "rgba(255,255,255,0.15)", color: "#ffffff", backdropFilter: "blur(4px)" }}>
             <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#5EEAD4" }} />
