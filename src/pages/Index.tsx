@@ -513,14 +513,150 @@ const Index = () => {
         </section>
       </main>
 
-      <footer className="border-t border-border">
-        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-2 px-6 py-8 md:flex-row md:items-center">
-          <Logo />
-          <p className="text-sm text-muted-foreground">
-            Your plateau-to-breakthrough study guide.
+      {/* Resource Library */}
+      <section style={{ backgroundColor: "#FAF7F2", padding: "72px 24px" }}>
+        <div className="text-center">
+          <h2
+            className="font-bold"
+            style={{ color: "#1A1A2E", fontSize: "1.75rem" }}
+          >
+            12+ resources. All in one place.
+          </h2>
+          <p
+            className="mx-auto mt-3"
+            style={{ color: "#6B7280", fontSize: "0.9rem", maxWidth: 600 }}
+          >
+            We've curated the highest-rated free and paid LSAT study sources — scored and ranked by students who used them to break through.
           </p>
         </div>
-      </footer>
+        <div className="text-center mt-10">
+          <div
+            style={{
+              color: "#1A1A2E",
+              fontSize: "5rem",
+              fontWeight: 700,
+              fontFamily: "'Playfair Display', serif",
+              lineHeight: 1,
+            }}
+          >
+            12
+          </div>
+          <div className="mt-2" style={{ color: "#6B7280", fontSize: "0.85rem" }}>
+            curated sources, growing every month
+          </div>
+        </div>
+        <div className="mx-auto mt-10" style={{ maxWidth: 760 }}>
+          {[
+            { items: ["7Sage", "Khan Academy", "LSAT Demon", "PowerScore", "Blueprint LSAT"], offset: 0 },
+            { items: ["Reddit r/LSAT", "Nathan Fox (YouTube)", "Manhattan Prep", "Velocity LSAT"], offset: 40 },
+            { items: ["LSAC Official Prep", "Magoosh", "7Sage PT Analyzer"], offset: 80 },
+          ].map((row, i) => (
+            <div
+              key={i}
+              className="flex flex-wrap justify-center gap-3 mt-3"
+              style={{ marginLeft: row.offset }}
+            >
+              {row.items.map((p) => (
+                <span
+                  key={p}
+                  style={{
+                    backgroundColor: "#FFFFFF",
+                    border: "1px solid #E5E7EB",
+                    borderRadius: 99,
+                    padding: "8px 18px",
+                    fontSize: "0.875rem",
+                    color: "#1A1A2E",
+                  }}
+                >
+                  {p}
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+        <p className="text-center mt-8" style={{ color: "#9CA3AF", fontSize: "0.8rem" }}>
+          New sources added as the community validates them.
+        </p>
+      </section>
+
+      {/* Final CTA */}
+      <section style={{ backgroundColor: "#FAF7F2", padding: "64px 24px" }}>
+        <div
+          className="mx-auto relative overflow-hidden"
+          style={{
+            maxWidth: 900,
+            borderRadius: 24,
+            padding: "72px 48px",
+            background:
+              "linear-gradient(160deg, #A8D8EA 0%, #C8E6C9 20%, #F9E4B7 45%, #FFCCBC 65%, #B2EBF2 85%, #A5D6A7 100%)",
+          }}
+        >
+          <div className="text-center">
+            <h2
+              className="font-bold mx-auto"
+              style={{ color: "#1A1A2E", fontSize: "2.75rem", lineHeight: 1.2, maxWidth: 720 }}
+            >
+              Your breakthrough resource is already out there.
+            </h2>
+            <p
+              className="mx-auto"
+              style={{ color: "#374151", fontSize: "1rem", marginTop: 12, maxWidth: 420 }}
+            >
+              Take the 5-minute quiz. Get matched to what actually worked for students at your plateau. Free to start.
+            </p>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                navigate("/quiz");
+              }}
+              className="mx-auto mt-8 flex items-center bg-white"
+              style={{
+                maxWidth: 420,
+                borderRadius: 99,
+                padding: "6px 6px 6px 20px",
+              }}
+            >
+              <input
+                type="email"
+                required
+                placeholder="your_email@gmail.com"
+                className="flex-1 bg-transparent outline-none border-0"
+                style={{ fontSize: "0.95rem" }}
+              />
+              <button
+                type="submit"
+                className="flex items-center justify-center"
+                style={{
+                  backgroundColor: "#1A1A2E",
+                  borderRadius: "50%",
+                  width: 44,
+                  height: 44,
+                }}
+                aria-label="Submit"
+              >
+                <ArrowUpRight className="h-5 w-5 text-white" />
+              </button>
+            </form>
+          </div>
+        </div>
+        <div
+          className="mx-auto mt-10 flex items-center justify-between px-2"
+          style={{ maxWidth: 900 }}
+        >
+          <span
+            style={{
+              color: "#1A1A2E",
+              fontSize: "1rem",
+              fontFamily: "'Playfair Display', serif",
+            }}
+          >
+            Briefly Brilliant
+          </span>
+          <span style={{ color: "#9CA3AF", fontSize: "0.8rem" }}>
+            © 2026 Briefly Brilliant. All rights reserved.
+          </span>
+        </div>
+      </section>
     </div>
   );
 };
