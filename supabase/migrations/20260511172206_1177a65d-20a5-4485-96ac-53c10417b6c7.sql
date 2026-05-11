@@ -1,0 +1,1 @@
+ALTER TABLE public.lsat_resources ALTER COLUMN tags TYPE TEXT USING array_to_string(tags, ', ');

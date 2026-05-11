@@ -28,7 +28,7 @@ export type Database = {
           price_range: string | null
           resource_name: string | null
           section_focus: string | null
-          tags: string[] | null
+          tags: string | null
           updated_at: string
           url: string | null
           weekly_hours: string | null
@@ -46,7 +46,7 @@ export type Database = {
           price_range?: string | null
           resource_name?: string | null
           section_focus?: string | null
-          tags?: string[] | null
+          tags?: string | null
           updated_at?: string
           url?: string | null
           weekly_hours?: string | null
@@ -64,7 +64,7 @@ export type Database = {
           price_range?: string | null
           resource_name?: string | null
           section_focus?: string | null
-          tags?: string[] | null
+          tags?: string | null
           updated_at?: string
           url?: string | null
           weekly_hours?: string | null
