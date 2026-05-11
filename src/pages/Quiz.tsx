@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Brain, BookOpenText, Check, Sparkles, Timer, Layers } from "lucide-react";
+import { ArrowLeft, ArrowRight, Brain, BookOpenText, Check, Timer, Layers, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import {
@@ -103,7 +103,8 @@ const Quiz = () => {
   const [budget, setBudget] = useState<Budget | null>(null);
   const [learningFormat, setLearningFormat] = useState<LearningFormat | null>(null);
   const [experience, setExperience] = useState<Experience | null>(null);
-  const [done, setDone] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const canNext = useMemo(() => {
     switch (step) {
@@ -128,60 +129,69 @@ const Quiz = () => {
     }
   }, [step, currentScore, targetScore, section, weeklyHours, testDate, budget, learningFormat, experience]);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step < TOTAL_STEPS) {
       setStep((s) => s + 1);
-    } else {
-      const state: QuizState = {
-        currentScore,
-        targetScore,
-        section: section!,
-        weeklyHours: weeklyHours!,
-        testDate: testDate!,
-        budget: budget!,
-        learningFormat: learningFormat!,
-        experience: experience!,
-      };
-      saveQuizState(state);
-      setDone(true);
+      return;
+    }
+    const state: QuizState = {
+      currentScore,
+      targetScore,
+      section: section!,
+      weeklyHours: weeklyHours!,
+      testDate: testDate!,
+      budget: budget!,
+      learningFormat: learningFormat!,
+      experience: experience!,
+    };
+    saveQuizState(state);
+    setSubmitError(null);
+    setSubmitting(true);
+    try {
+      const res = await fetch(
+        "https://puivlxldzeinfpljixme.supabase.co/functions/v1/recommend-resources",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            currentScore,
+            targetScore,
+            sectionObstacle: section,
+            weeklyHours,
+            testTimeline: testDate,
+            budget,
+            learningFormat,
+            experience,
+          }),
+        }
+      );
+      if (!res.ok) throw new Error(`Request failed (${res.status})`);
+      const data = await res.json();
+      navigate("/quiz/results", {
+        state: { recommendations: data.recommendations ?? [] },
+      });
+    } catch (err) {
+      setSubmitting(false);
+      setSubmitError(
+        err instanceof Error ? err.message : "Something went wrong. Please try again."
+      );
     }
   };
 
-  const budgetLabel = BUDGET_OPTIONS.find((o) => o.value === budget)?.label ?? "";
-
-  if (done) {
+  if (submitting) {
     return (
       <div className="min-h-screen bg-background text-foreground">
         <header className="mx-auto flex max-w-3xl items-center justify-between px-6 py-6">
           <Logo />
         </header>
-        <main className="mx-auto max-w-2xl px-6 pt-12 pb-24 text-center animate-fade-in">
-          <span className="inline-flex items-center gap-2 rounded-full bg-primary-soft px-3 py-1 text-xs font-medium text-primary">
-            <Sparkles className="h-3 w-3" />
-            All set
-          </span>
-          <h1 className="mt-6 text-4xl font-bold tracking-tight md:text-5xl">
-            Your study profile is ready.
+        <main className="mx-auto flex max-w-2xl flex-col items-center px-6 pt-24 pb-24 text-center animate-fade-in">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <h1 className="mt-8 text-3xl font-bold tracking-tight md:text-4xl">
+            Analyzing your profile...
           </h1>
-          <div className="mt-8 flex flex-wrap justify-center gap-2">
-            <span className="rounded-full bg-card border border-border px-4 py-2 text-sm font-medium text-foreground shadow-card">
-              Score: {currentScore === "no_score" ? "—" : currentScore} → {targetScore}
-            </span>
-            <span className="rounded-full bg-card border border-border px-4 py-2 text-sm font-medium text-foreground shadow-card">
-              Focus: {section}
-            </span>
-            <span className="rounded-full bg-card border border-border px-4 py-2 text-sm font-medium text-foreground shadow-card">
-              Budget: {budgetLabel}
-            </span>
-          </div>
-          <Button
-            size="lg"
-            onClick={() => navigate("/quiz/results")}
-            className="mt-10 h-12 rounded-xl px-6 text-base shadow-card"
-          >
-            See My Matched Resources
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </Button>
+          <p className="mt-3 text-muted-foreground">
+            Matching you with the resources that fit your goals.
+          </p>
         </main>
       </div>
     );
