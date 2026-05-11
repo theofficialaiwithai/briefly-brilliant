@@ -1,13 +1,15 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Brain, Puzzle, BookOpenText, Check, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Brain, BookOpenText, Check, Sparkles, Timer, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import {
-  Section,
   WeeklyHours,
   TestDate,
   Budget,
+  SectionObstacle,
+  LearningFormat,
+  Experience,
   QuizState,
   saveQuizState,
   scoreBandLabel,
@@ -15,13 +17,14 @@ import {
 import { cn } from "@/lib/utils";
 
 const SECTION_OPTIONS: {
-  value: Section;
+  value: SectionObstacle;
   icon: React.ComponentType<{ className?: string }>;
   blurb: string;
 }[] = [
   { value: "Logical Reasoning", icon: Brain, blurb: "Arguments, assumptions, and flaws" },
-  { value: "Logic Games", icon: Puzzle, blurb: "Ordering, grouping, and matching puzzles" },
   { value: "Reading Comprehension", icon: BookOpenText, blurb: "Dense passages and tricky questions" },
+  { value: "Pacing & time management", icon: Timer, blurb: "Running out of time on sections" },
+  { value: "I struggle with everything equally", icon: Layers, blurb: "No single section stands out" },
 ];
 
 const HOURS_OPTIONS: { value: WeeklyHours; label: string }[] = [
@@ -45,7 +48,20 @@ const BUDGET_OPTIONS: { value: Budget; label: string; sub: string }[] = [
   { value: "any", label: "Whatever it takes", sub: "Show me the best, paid or free" },
 ];
 
-const TOTAL_STEPS = 6;
+const LEARNING_FORMAT_OPTIONS: { value: LearningFormat; sub: string }[] = [
+  { value: "Video lessons", sub: "Watch and learn at your pace" },
+  { value: "Books & reading", sub: "Self-study with written material" },
+  { value: "Live instruction with a teacher", sub: "Real-time classes with an expert" },
+  { value: "Drilling with lots of practice", sub: "Learn by doing problems" },
+  { value: "A mix of everything", sub: "Whatever works best, mix it up" },
+];
+
+const EXPERIENCE_OPTIONS: { value: Experience; label: string }[] = [
+  { value: "first_time", label: "No, this is my first time" },
+  { value: "retaker", label: "Yes, I am retaking it" },
+];
+
+const TOTAL_STEPS = 8;
 
 const ScoreSlider = ({
   value,
@@ -79,20 +95,22 @@ const ScoreSlider = ({
 const Quiz = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
-  const [currentScore, setCurrentScore] = useState(155);
+  const [currentScore, setCurrentScore] = useState<number | "no_score">(155);
   const [targetScore, setTargetScore] = useState(165);
-  const [section, setSection] = useState<Section | null>(null);
+  const [section, setSection] = useState<SectionObstacle | null>(null);
   const [weeklyHours, setWeeklyHours] = useState<WeeklyHours | null>(null);
   const [testDate, setTestDate] = useState<TestDate | null>(null);
   const [budget, setBudget] = useState<Budget | null>(null);
+  const [learningFormat, setLearningFormat] = useState<LearningFormat | null>(null);
+  const [experience, setExperience] = useState<Experience | null>(null);
   const [done, setDone] = useState(false);
 
   const canNext = useMemo(() => {
     switch (step) {
       case 1:
-        return currentScore >= 120 && currentScore <= 180;
+        return currentScore === "no_score" || (currentScore >= 120 && currentScore <= 180);
       case 2:
-        return targetScore >= currentScore;
+        return currentScore === "no_score" ? targetScore >= 120 : targetScore >= currentScore;
       case 3:
         return section !== null;
       case 4:
@@ -101,10 +119,14 @@ const Quiz = () => {
         return testDate !== null;
       case 6:
         return budget !== null;
+      case 7:
+        return learningFormat !== null;
+      case 8:
+        return experience !== null;
       default:
         return false;
     }
-  }, [step, currentScore, targetScore, section, weeklyHours, testDate, budget]);
+  }, [step, currentScore, targetScore, section, weeklyHours, testDate, budget, learningFormat, experience]);
 
   const handleNext = () => {
     if (step < TOTAL_STEPS) {
@@ -117,6 +139,8 @@ const Quiz = () => {
         weeklyHours: weeklyHours!,
         testDate: testDate!,
         budget: budget!,
+        learningFormat: learningFormat!,
+        experience: experience!,
       };
       saveQuizState(state);
       setDone(true);
@@ -141,7 +165,7 @@ const Quiz = () => {
           </h1>
           <div className="mt-8 flex flex-wrap justify-center gap-2">
             <span className="rounded-full bg-card border border-border px-4 py-2 text-sm font-medium text-foreground shadow-card">
-              Score: {currentScore} → {targetScore}
+              Score: {currentScore === "no_score" ? "—" : currentScore} → {targetScore}
             </span>
             <span className="rounded-full bg-card border border-border px-4 py-2 text-sm font-medium text-foreground shadow-card">
               Focus: {section}
@@ -196,7 +220,29 @@ const Quiz = () => {
                 What's your current practice test score?
               </h1>
               <p className="mt-3 text-muted-foreground">Drag to set your most recent score.</p>
-              <ScoreSlider value={currentScore} onChange={setCurrentScore} />
+              <ScoreSlider
+                value={typeof currentScore === "number" ? currentScore : 155}
+                onChange={setCurrentScore}
+              />
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentScore(currentScore === "no_score" ? 155 : "no_score")
+                }
+                className={cn(
+                  "mt-6 w-full rounded-xl border p-4 text-left transition-all",
+                  currentScore === "no_score"
+                    ? "border-primary bg-primary-soft shadow-card"
+                    : "border-border bg-background hover:border-foreground/20 hover:bg-muted/40"
+                )}
+              >
+                <div className="font-semibold text-foreground">
+                  I haven't taken a practice test yet
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  We'll treat you as a complete beginner.
+                </div>
+              </button>
             </>
           )}
 
@@ -207,12 +253,12 @@ const Quiz = () => {
               </h1>
               <p className="mt-3 text-muted-foreground">Where do you want to land?</p>
               <ScoreSlider value={targetScore} onChange={setTargetScore} min={120} />
-              {targetScore === currentScore && (
+              {typeof currentScore === "number" && targetScore === currentScore && (
                 <p className="mt-4 text-center text-sm text-amber-700">
                   Same as your current score — set a higher target to find growth resources.
                 </p>
               )}
-              {targetScore < currentScore && (
+              {typeof currentScore === "number" && targetScore < currentScore && (
                 <p className="mt-4 text-center text-sm text-destructive">
                   Target must be at least your current score.
                 </p>
@@ -339,6 +385,63 @@ const Quiz = () => {
                     >
                       <div className="font-semibold text-foreground">{o.label}</div>
                       <div className="text-sm text-muted-foreground">{o.sub}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          {step === 7 && (
+            <>
+              <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
+                How do you prefer to learn?
+              </h1>
+              <div className="mt-8 grid gap-3">
+                {LEARNING_FORMAT_OPTIONS.map((o) => {
+                  const active = learningFormat === o.value;
+                  return (
+                    <button
+                      key={o.value}
+                      type="button"
+                      onClick={() => setLearningFormat(o.value)}
+                      className={cn(
+                        "rounded-xl border p-4 text-left transition-all",
+                        active
+                          ? "border-primary bg-primary-soft shadow-card"
+                          : "border-border bg-background hover:border-foreground/20 hover:bg-muted/40"
+                      )}
+                    >
+                      <div className="font-semibold text-foreground">{o.value}</div>
+                      <div className="text-sm text-muted-foreground">{o.sub}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          {step === 8 && (
+            <>
+              <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
+                Have you taken the LSAT before?
+              </h1>
+              <div className="mt-8 grid gap-3">
+                {EXPERIENCE_OPTIONS.map((o) => {
+                  const active = experience === o.value;
+                  return (
+                    <button
+                      key={o.value}
+                      type="button"
+                      onClick={() => setExperience(o.value)}
+                      className={cn(
+                        "rounded-xl border p-4 text-left transition-all",
+                        active
+                          ? "border-primary bg-primary-soft shadow-card"
+                          : "border-border bg-background hover:border-foreground/20 hover:bg-muted/40"
+                      )}
+                    >
+                      <div className="font-semibold text-foreground">{o.label}</div>
                     </button>
                   );
                 })}
