@@ -392,6 +392,63 @@ const Quiz = () => {
             </>
           )}
 
+          {step === 7 && (
+            <>
+              <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
+                How do you prefer to learn?
+              </h1>
+              <div className="mt-8 grid gap-3">
+                {LEARNING_FORMAT_OPTIONS.map((o) => {
+                  const active = learningFormat === o.value;
+                  return (
+                    <button
+                      key={o.value}
+                      type="button"
+                      onClick={() => setLearningFormat(o.value)}
+                      className={cn(
+                        "rounded-xl border p-4 text-left transition-all",
+                        active
+                          ? "border-primary bg-primary-soft shadow-card"
+                          : "border-border bg-background hover:border-foreground/20 hover:bg-muted/40"
+                      )}
+                    >
+                      <div className="font-semibold text-foreground">{o.value}</div>
+                      <div className="text-sm text-muted-foreground">{o.sub}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          {step === 8 && (
+            <>
+              <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
+                Have you taken the LSAT before?
+              </h1>
+              <div className="mt-8 grid gap-3">
+                {EXPERIENCE_OPTIONS.map((o) => {
+                  const active = experience === o.value;
+                  return (
+                    <button
+                      key={o.value}
+                      type="button"
+                      onClick={() => setExperience(o.value)}
+                      className={cn(
+                        "rounded-xl border p-4 text-left transition-all",
+                        active
+                          ? "border-primary bg-primary-soft shadow-card"
+                          : "border-border bg-background hover:border-foreground/20 hover:bg-muted/40"
+                      )}
+                    >
+                      <div className="font-semibold text-foreground">{o.label}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
           <div className="mt-10 flex items-center justify-between">
             <Button
               variant="ghost"
