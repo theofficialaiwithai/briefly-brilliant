@@ -30,14 +30,28 @@ export type ScoreBand = "120-149" | "150-159" | "160-169" | "170-180";
 export type WeeklyHours = "<5" | "5-10" | "10-20" | "20+";
 export type TestDate = "<4w" | "1-3m" | "3-6m" | "none";
 export type Budget = "free" | "50" | "200" | "any";
+export type SectionObstacle =
+  | "Logical Reasoning"
+  | "Reading Comprehension"
+  | "Pacing & time management"
+  | "I struggle with everything equally";
+export type LearningFormat =
+  | "Video lessons"
+  | "Books & reading"
+  | "Live instruction with a teacher"
+  | "Drilling with lots of practice"
+  | "A mix of everything";
+export type Experience = "first_time" | "retaker";
 
 export type QuizState = {
-  currentScore: number;
+  currentScore: number | "no_score";
   targetScore: number;
-  section: Section;
+  section: SectionObstacle;
   weeklyHours: WeeklyHours;
   testDate: TestDate;
   budget: Budget;
+  learningFormat: LearningFormat;
+  experience: Experience;
 };
 
 export function saveQuizState(state: QuizState) {
