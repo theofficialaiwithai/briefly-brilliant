@@ -1,13 +1,15 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Brain, Puzzle, BookOpenText, Check, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Brain, BookOpenText, Check, Sparkles, Timer, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import {
-  Section,
   WeeklyHours,
   TestDate,
   Budget,
+  SectionObstacle,
+  LearningFormat,
+  Experience,
   QuizState,
   saveQuizState,
   scoreBandLabel,
@@ -15,13 +17,14 @@ import {
 import { cn } from "@/lib/utils";
 
 const SECTION_OPTIONS: {
-  value: Section;
+  value: SectionObstacle;
   icon: React.ComponentType<{ className?: string }>;
   blurb: string;
 }[] = [
   { value: "Logical Reasoning", icon: Brain, blurb: "Arguments, assumptions, and flaws" },
-  { value: "Logic Games", icon: Puzzle, blurb: "Ordering, grouping, and matching puzzles" },
   { value: "Reading Comprehension", icon: BookOpenText, blurb: "Dense passages and tricky questions" },
+  { value: "Pacing & time management", icon: Timer, blurb: "Running out of time on sections" },
+  { value: "I struggle with everything equally", icon: Layers, blurb: "No single section stands out" },
 ];
 
 const HOURS_OPTIONS: { value: WeeklyHours; label: string }[] = [
@@ -45,7 +48,20 @@ const BUDGET_OPTIONS: { value: Budget; label: string; sub: string }[] = [
   { value: "any", label: "Whatever it takes", sub: "Show me the best, paid or free" },
 ];
 
-const TOTAL_STEPS = 6;
+const LEARNING_FORMAT_OPTIONS: { value: LearningFormat; sub: string }[] = [
+  { value: "Video lessons", sub: "Watch and learn at your pace" },
+  { value: "Books & reading", sub: "Self-study with written material" },
+  { value: "Live instruction with a teacher", sub: "Real-time classes with an expert" },
+  { value: "Drilling with lots of practice", sub: "Learn by doing problems" },
+  { value: "A mix of everything", sub: "Whatever works best, mix it up" },
+];
+
+const EXPERIENCE_OPTIONS: { value: Experience; label: string }[] = [
+  { value: "first_time", label: "No, this is my first time" },
+  { value: "retaker", label: "Yes, I am retaking it" },
+];
+
+const TOTAL_STEPS = 8;
 
 const ScoreSlider = ({
   value,
@@ -79,20 +95,22 @@ const ScoreSlider = ({
 const Quiz = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
-  const [currentScore, setCurrentScore] = useState(155);
+  const [currentScore, setCurrentScore] = useState<number | "no_score">(155);
   const [targetScore, setTargetScore] = useState(165);
-  const [section, setSection] = useState<Section | null>(null);
+  const [section, setSection] = useState<SectionObstacle | null>(null);
   const [weeklyHours, setWeeklyHours] = useState<WeeklyHours | null>(null);
   const [testDate, setTestDate] = useState<TestDate | null>(null);
   const [budget, setBudget] = useState<Budget | null>(null);
+  const [learningFormat, setLearningFormat] = useState<LearningFormat | null>(null);
+  const [experience, setExperience] = useState<Experience | null>(null);
   const [done, setDone] = useState(false);
 
   const canNext = useMemo(() => {
     switch (step) {
       case 1:
-        return currentScore >= 120 && currentScore <= 180;
+        return currentScore === "no_score" || (currentScore >= 120 && currentScore <= 180);
       case 2:
-        return targetScore >= currentScore;
+        return currentScore === "no_score" ? targetScore >= 120 : targetScore >= currentScore;
       case 3:
         return section !== null;
       case 4:
@@ -101,10 +119,14 @@ const Quiz = () => {
         return testDate !== null;
       case 6:
         return budget !== null;
+      case 7:
+        return learningFormat !== null;
+      case 8:
+        return experience !== null;
       default:
         return false;
     }
-  }, [step, currentScore, targetScore, section, weeklyHours, testDate, budget]);
+  }, [step, currentScore, targetScore, section, weeklyHours, testDate, budget, learningFormat, experience]);
 
   const handleNext = () => {
     if (step < TOTAL_STEPS) {
@@ -117,6 +139,8 @@ const Quiz = () => {
         weeklyHours: weeklyHours!,
         testDate: testDate!,
         budget: budget!,
+        learningFormat: learningFormat!,
+        experience: experience!,
       };
       saveQuizState(state);
       setDone(true);
@@ -141,7 +165,7 @@ const Quiz = () => {
           </h1>
           <div className="mt-8 flex flex-wrap justify-center gap-2">
             <span className="rounded-full bg-card border border-border px-4 py-2 text-sm font-medium text-foreground shadow-card">
-              Score: {currentScore} → {targetScore}
+              Score: {currentScore === "no_score" ? "—" : currentScore} → {targetScore}
             </span>
             <span className="rounded-full bg-card border border-border px-4 py-2 text-sm font-medium text-foreground shadow-card">
               Focus: {section}
