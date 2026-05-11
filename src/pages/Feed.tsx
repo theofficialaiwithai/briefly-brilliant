@@ -289,8 +289,19 @@ const Feed = () => {
   const quiz = useMemo(() => loadQuizState(), []);
 
   // Pre-apply filters from quiz state
-  const initialSection: SectionFilter = quiz?.section ?? "All";
-  const initialBand: BandFilter = quiz ? scoreToBand(quiz.currentScore) : "All";
+  const KNOWN_SECTIONS: Section[] = [
+    "Logical Reasoning",
+    "Logic Games",
+    "Reading Comprehension",
+  ];
+  const initialSection: SectionFilter =
+    quiz && KNOWN_SECTIONS.includes(quiz.section as Section)
+      ? (quiz.section as Section)
+      : "All";
+  const initialBand: BandFilter =
+    quiz && typeof quiz.currentScore === "number"
+      ? scoreToBand(quiz.currentScore)
+      : "All";
   const initialType: TypeFilter =
     quiz?.budget === "free" ? "Free" : "All";
 
