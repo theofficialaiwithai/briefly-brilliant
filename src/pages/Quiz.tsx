@@ -220,7 +220,29 @@ const Quiz = () => {
                 What's your current practice test score?
               </h1>
               <p className="mt-3 text-muted-foreground">Drag to set your most recent score.</p>
-              <ScoreSlider value={currentScore} onChange={setCurrentScore} />
+              <ScoreSlider
+                value={typeof currentScore === "number" ? currentScore : 155}
+                onChange={setCurrentScore}
+              />
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentScore(currentScore === "no_score" ? 155 : "no_score")
+                }
+                className={cn(
+                  "mt-6 w-full rounded-xl border p-4 text-left transition-all",
+                  currentScore === "no_score"
+                    ? "border-primary bg-primary-soft shadow-card"
+                    : "border-border bg-background hover:border-foreground/20 hover:bg-muted/40"
+                )}
+              >
+                <div className="font-semibold text-foreground">
+                  I haven't taken a practice test yet
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  We'll treat you as a complete beginner.
+                </div>
+              </button>
             </>
           )}
 
@@ -231,12 +253,12 @@ const Quiz = () => {
               </h1>
               <p className="mt-3 text-muted-foreground">Where do you want to land?</p>
               <ScoreSlider value={targetScore} onChange={setTargetScore} min={120} />
-              {targetScore === currentScore && (
+              {typeof currentScore === "number" && targetScore === currentScore && (
                 <p className="mt-4 text-center text-sm text-amber-700">
                   Same as your current score — set a higher target to find growth resources.
                 </p>
               )}
-              {targetScore < currentScore && (
+              {typeof currentScore === "number" && targetScore < currentScore && (
                 <p className="mt-4 text-center text-sm text-destructive">
                   Target must be at least your current score.
                 </p>
