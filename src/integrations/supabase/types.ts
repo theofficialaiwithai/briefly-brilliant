@@ -14,7 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      lsat_resources: {
+        Row: {
+          best_for_timeline: string | null
+          best_score_range: string | null
+          category: string | null
+          cost_type: string | null
+          created_at: string
+          description: string | null
+          experience_level: string | null
+          format: string | null
+          id: string
+          price_range: string | null
+          resource_name: string | null
+          section_focus: string | null
+          tags: string[] | null
+          updated_at: string
+          url: string | null
+          weekly_hours: string | null
+        }
+        Insert: {
+          best_for_timeline?: string | null
+          best_score_range?: string | null
+          category?: string | null
+          cost_type?: string | null
+          created_at?: string
+          description?: string | null
+          experience_level?: string | null
+          format?: string | null
+          id?: string
+          price_range?: string | null
+          resource_name?: string | null
+          section_focus?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          url?: string | null
+          weekly_hours?: string | null
+        }
+        Update: {
+          best_for_timeline?: string | null
+          best_score_range?: string | null
+          category?: string | null
+          cost_type?: string | null
+          created_at?: string
+          description?: string | null
+          experience_level?: string | null
+          format?: string | null
+          id?: string
+          price_range?: string | null
+          resource_name?: string | null
+          section_focus?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          url?: string | null
+          weekly_hours?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
