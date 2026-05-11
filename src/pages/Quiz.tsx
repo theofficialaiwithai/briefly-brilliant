@@ -479,6 +479,9 @@ const Quiz = () => {
               <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </div>
+          {submitError && (
+            <p className="mt-4 text-center text-sm text-destructive">{submitError}</p>
+          )}
         </section>
       </main>
     </div>
