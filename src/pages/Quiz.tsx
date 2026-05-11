@@ -172,9 +172,11 @@ const Quiz = () => {
       });
     } catch (err) {
       setSubmitting(false);
-      setSubmitError(
-        err instanceof Error ? err.message : "Something went wrong. Please try again."
-      );
+      navigate("/quiz/results", {
+        state: {
+          error: err instanceof Error ? err.message : "Request failed",
+        },
+      });
     }
   };
 
