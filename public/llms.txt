@@ -1,0 +1,14 @@
+# Briefly Brilliant
+
+> Plateau-to-breakthrough LSAT study guide. Score-matched resources powered by students who broke through the same wall.
+
+Briefly Brilliant matches LSAT students with study resources that have actually moved scores for students at the same plateau. After a short quiz about current score, target, weakest section, timeline, budget, and learning style, students get a personalized list of resources and can join study groups.
+
+## Pages
+
+- [Home](/): Product overview and how matching works.
+- [Quiz](/quiz): 8-question intake that builds a personalized resource plan.
+- [Feed](/feed): Score-matched LSAT resources, filterable by section, type, source, and score band.
+- [Stories](/stories): First-hand student score-journey stories.
+- [Groups](/groups): Community LSAT study groups by score range and section focus.
+- [Sign in](/auth): Account creation and login.
