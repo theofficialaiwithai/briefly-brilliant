@@ -205,6 +205,11 @@ const Quiz = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SEO
+        title="Take the LSAT match quiz — Briefly Brilliant"
+        description="Answer 8 quick questions about your score, timeline, and study style to get a personalized LSAT resource plan."
+        path="/quiz"
+      />
       <header className="mx-auto flex max-w-3xl items-center justify-between px-6 py-6">
         <Logo />
         <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
