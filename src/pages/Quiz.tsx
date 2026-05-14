@@ -239,6 +239,7 @@ const Quiz = () => {
               <ScoreSlider
                 value={typeof currentScore === "number" ? currentScore : 155}
                 onChange={setCurrentScore}
+                ariaLabel="Current LSAT practice test score"
               />
               <button
                 type="button"
@@ -268,7 +269,12 @@ const Quiz = () => {
                 What's your target score?
               </h1>
               <p className="mt-3 text-muted-foreground">Where do you want to land?</p>
-              <ScoreSlider value={targetScore} onChange={setTargetScore} min={120} />
+              <ScoreSlider
+                value={targetScore}
+                onChange={setTargetScore}
+                min={120}
+                ariaLabel="Target LSAT score"
+              />
               {typeof currentScore === "number" && targetScore === currentScore && (
                 <p className="mt-4 text-center text-sm text-amber-700">
                   Same as your current score — set a higher target to find growth resources.
