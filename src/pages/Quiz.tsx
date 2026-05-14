@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Brain, BookOpenText, Check, Timer, Layers, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
+import { SEO } from "@/components/SEO";
 import {
   WeeklyHours,
   TestDate,
@@ -67,10 +68,12 @@ const ScoreSlider = ({
   value,
   onChange,
   min = 120,
+  ariaLabel,
 }: {
   value: number;
   onChange: (n: number) => void;
   min?: number;
+  ariaLabel: string;
 }) => (
   <div className="mt-8">
     <div className="text-center">
@@ -84,6 +87,7 @@ const ScoreSlider = ({
       value={value}
       onChange={(e) => onChange(Number(e.target.value))}
       className="mt-8 w-full accent-primary"
+      aria-label={ariaLabel}
     />
     <div className="mt-2 flex justify-between text-xs text-muted-foreground">
       <span>{min}</span>
@@ -201,6 +205,11 @@ const Quiz = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SEO
+        title="Take the LSAT match quiz — Briefly Brilliant"
+        description="Answer 8 quick questions about your score, timeline, and study style to get a personalized LSAT resource plan."
+        path="/quiz"
+      />
       <header className="mx-auto flex max-w-3xl items-center justify-between px-6 py-6">
         <Logo />
         <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
@@ -235,6 +244,7 @@ const Quiz = () => {
               <ScoreSlider
                 value={typeof currentScore === "number" ? currentScore : 155}
                 onChange={setCurrentScore}
+                ariaLabel="Current LSAT practice test score"
               />
               <button
                 type="button"
@@ -264,7 +274,12 @@ const Quiz = () => {
                 What's your target score?
               </h1>
               <p className="mt-3 text-muted-foreground">Where do you want to land?</p>
-              <ScoreSlider value={targetScore} onChange={setTargetScore} min={120} />
+              <ScoreSlider
+                value={targetScore}
+                onChange={setTargetScore}
+                min={120}
+                ariaLabel="Target LSAT score"
+              />
               {typeof currentScore === "number" && targetScore === currentScore && (
                 <p className="mt-4 text-center text-sm text-amber-700">
                   Same as your current score — set a higher target to find growth resources.
