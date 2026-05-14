@@ -164,6 +164,11 @@ const Groups = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SEO
+        title="Community Study Groups — Briefly Brilliant"
+        description="Find LSAT students at your score plateau. Join a study group, share resources, and break through together."
+        path="/groups"
+      />
       <NavBar />
       <main className="mx-auto max-w-5xl px-6 pb-24 pt-10">
         <h1 className="text-[2rem] font-bold tracking-tight text-foreground">
@@ -202,6 +207,7 @@ const Groups = () => {
           <div className="mt-4 grid gap-3">
             <input
               placeholder="Group name"
+              aria-label="Group name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="block w-full rounded-lg border border-[#E5E7EB] bg-card px-3 py-2 text-sm text-foreground"
