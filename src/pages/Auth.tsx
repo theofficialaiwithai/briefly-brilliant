@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
+import { SEO } from "@/components/SEO";
 
 type Mode = "signup" | "login";
 
@@ -46,6 +47,15 @@ const Auth = () => {
       className="min-h-screen flex items-center justify-center px-4"
       style={{ backgroundColor: "#FAF7F2" }}
     >
+      <SEO
+        title={mode === "signup" ? "Sign up — Briefly Brilliant" : "Log in — Briefly Brilliant"}
+        description={
+          mode === "signup"
+            ? "Create your Briefly Brilliant account to get score-matched LSAT resources tailored to your plateau."
+            : "Log in to Briefly Brilliant to continue your personalized LSAT study plan."
+        }
+        path="/auth"
+      />
       <div
         className="bg-white w-full"
         style={{
@@ -64,7 +74,7 @@ const Auth = () => {
             fontWeight: 700,
           }}
         >
-          Briefly Brilliant
+          {mode === "signup" ? "Sign up to Briefly Brilliant" : "Log in to Briefly Brilliant"}
         </h1>
 
         {/* Tabs */}
@@ -99,14 +109,15 @@ const Auth = () => {
 
         <form onSubmit={submit} className="mt-6 space-y-3">
           {mode === "signup" && (
-            <input style={inputStyle} type="text" placeholder="Full name" required />
+            <input style={inputStyle} type="text" placeholder="Full name" aria-label="Full name" required />
           )}
-          <input style={inputStyle} type="email" placeholder="Email" required />
+          <input style={inputStyle} type="email" placeholder="Email" aria-label="Email" required />
           <div style={{ position: "relative" }}>
             <input
               style={{ ...inputStyle, paddingRight: 40 }}
               type={showPwd ? "text" : "password"}
               placeholder="Password"
+              aria-label="Password"
               required
             />
             <button
