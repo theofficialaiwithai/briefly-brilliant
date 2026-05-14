@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Logo } from "@/components/Logo";
+import { SEO } from "@/components/SEO";
 import { Section } from "@/lib/study";
 import { cn } from "@/lib/utils";
 
