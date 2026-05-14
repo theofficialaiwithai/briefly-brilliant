@@ -9,6 +9,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { SEO } from "@/components/SEO";
 import {
   SEED_RESOURCES,
   Resource,
@@ -92,9 +93,9 @@ const FilterGroup = ({
   format?: (v: string) => string;
 }) => (
   <div>
-    <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+    <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
       {label}
-    </h3>
+    </h2>
     <div className="flex flex-col gap-1">
       {options.map((o) => {
         const active = value === o;
@@ -146,9 +147,9 @@ const ResourceRow = ({ r }: { r: Resource }) => {
 
         {/* Middle */}
         <div className="min-w-0 flex-1">
-          <h3 className="text-base font-semibold leading-snug text-foreground">
+          <h2 className="text-base font-semibold leading-snug text-foreground">
             {r.title}
-          </h3>
+          </h2>
           <p className="mt-1 text-sm italic text-primary">{r.reason}</p>
           <div className="mt-3 flex flex-wrap items-center gap-1.5">
             <span
@@ -194,6 +195,7 @@ const ResourceRow = ({ r }: { r: Resource }) => {
                 : "border-border bg-background text-muted-foreground hover:border-foreground/20 hover:text-foreground"
             )}
             title="Completed"
+            aria-label="Mark as completed"
           >
             <Check className="h-4 w-4" />
           </button>
@@ -206,6 +208,7 @@ const ResourceRow = ({ r }: { r: Resource }) => {
                 : "border-border bg-background text-muted-foreground hover:border-foreground/20 hover:text-foreground"
             )}
             title="Skip"
+            aria-label="Skip resource"
           >
             <SkipForward className="h-4 w-4" />
           </button>
@@ -218,6 +221,7 @@ const ResourceRow = ({ r }: { r: Resource }) => {
                 : "border-border bg-background text-muted-foreground hover:border-foreground/20 hover:text-foreground"
             )}
             title="Save"
+            aria-label="Save resource"
           >
             <Bookmark className="h-4 w-4" />
           </button>
@@ -345,6 +349,11 @@ const Feed = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SEO
+        title="Your score-matched LSAT resources — Briefly Brilliant"
+        description="Curated LSAT study resources tailored to your current score, target, and weakest section."
+        path="/feed"
+      />
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <Logo />
