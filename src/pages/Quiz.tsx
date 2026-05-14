@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Brain, BookOpenText, Check, Timer, Layers, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
+import { SEO } from "@/components/SEO";
 import {
   WeeklyHours,
   TestDate,
@@ -67,10 +68,12 @@ const ScoreSlider = ({
   value,
   onChange,
   min = 120,
+  ariaLabel,
 }: {
   value: number;
   onChange: (n: number) => void;
   min?: number;
+  ariaLabel: string;
 }) => (
   <div className="mt-8">
     <div className="text-center">
@@ -84,6 +87,7 @@ const ScoreSlider = ({
       value={value}
       onChange={(e) => onChange(Number(e.target.value))}
       className="mt-8 w-full accent-primary"
+      aria-label={ariaLabel}
     />
     <div className="mt-2 flex justify-between text-xs text-muted-foreground">
       <span>{min}</span>
