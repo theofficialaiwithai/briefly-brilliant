@@ -10,6 +10,7 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { SEO } from "@/components/SEO";
 
 const steps = [
   {
@@ -73,6 +74,17 @@ const Index = () => {
   const [email, setEmail] = useState("");
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SEO
+        title="Briefly Brilliant — Plateau-to-breakthrough LSAT prep"
+        description="Score-matched LSAT resources, powered by students who broke through the same wall. Get a personalized study plan in 5 minutes."
+        path="/"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Briefly Brilliant",
+          url: "/",
+        }}
+      />
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <Logo />
         <nav className="flex items-center gap-2">
