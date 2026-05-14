@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Logo } from "@/components/Logo";
+import { SEO } from "@/components/SEO";
 import { Section } from "@/lib/study";
 import { cn } from "@/lib/utils";
 
@@ -124,6 +125,17 @@ const Stories = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SEO
+        title="Score Journey Stories — Briefly Brilliant"
+        description="Real LSAT students. Real plateaus. Real breakthroughs. Read first-hand accounts of how students broke through their score plateau."
+        path="/stories"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "Score Journey Stories",
+          url: "/stories",
+        }}
+      />
       <NavBar />
       <main className="mx-auto max-w-3xl px-6 pb-24 pt-10">
         <h1 className="text-[2rem] font-bold tracking-tight text-foreground">
