@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
+import { SEO } from "@/components/SEO";
 import { cn } from "@/lib/utils";
 
 type Recommendation = {
@@ -54,6 +55,11 @@ const QuizResults = () => {
   if (hadError || recommendations.length === 0) {
     return (
       <div className="min-h-screen bg-background text-foreground">
+        <SEO
+          title="Your matched LSAT resources — Briefly Brilliant"
+          description="Personalized LSAT resource recommendations based on your score, target, and study style."
+          path="/quiz/results"
+        />
         <header className="mx-auto flex max-w-3xl items-center justify-between px-6 py-6">
           <Logo />
         </header>
@@ -100,6 +106,11 @@ const QuizResults = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SEO
+        title="Your matched LSAT resources — Briefly Brilliant"
+        description="Personalized LSAT resource recommendations based on your score, target, and study style."
+        path="/quiz/results"
+      />
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <Logo />
