@@ -1,46 +1,120 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
+import { SignIn, SignUp, useAuth } from "@clerk/clerk-react";
 import { SEO } from "@/components/SEO";
 
 type Mode = "signup" | "login";
 
+// Clerk appearance tuned to match the existing Briefly Brilliant design system:
+// teal #0D9488 primary, Inter body, 8px radii on inputs/buttons, no Clerk chrome
+const clerkAppearance = {
+  variables: {
+    colorPrimary: "#0D9488",
+    colorText: "#1A1A2E",
+    colorTextSecondary: "#6B7280",
+    colorBackground: "#ffffff",
+    colorInputBackground: "#ffffff",
+    colorInputText: "#1A1A2E",
+    borderRadius: "8px",
+    fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
+    fontSize: "14.4px",
+  },
+  elements: {
+    // Our own card wrapper handles the container — make Clerk's invisible
+    rootBox: { width: "100%" },
+    card: {
+      boxShadow: "none",
+      padding: 0,
+      margin: 0,
+      border: "none",
+      backgroundColor: "transparent",
+    },
+    // Hide Clerk's own title/subtitle — we render our own above the component
+    header: { display: "none" },
+    headerTitle: { display: "none" },
+    headerSubtitle: { display: "none" },
+    // Hide Clerk's footer "Don't have an account?" — our tab toggle handles this
+    footer: { display: "none" },
+    footerAction: { display: "none" },
+    // Inputs
+    formFieldInput: {
+      border: "1px solid #E5E7EB",
+      borderRadius: "8px",
+      padding: "10px 12px",
+      fontSize: "0.9rem",
+    },
+    formFieldLabel: {
+      fontSize: "0.85rem",
+      color: "#374151",
+      fontWeight: "500",
+    },
+    formFieldErrorText: {
+      fontSize: "0.8rem",
+      color: "#DC2626",
+    },
+    // Primary submit button — teal fill, no uppercase
+    formButtonPrimary: {
+      backgroundColor: "#0D9488",
+      borderRadius: "8px",
+      padding: "12px",
+      fontSize: "0.95rem",
+      fontWeight: "600",
+      textTransform: "none" as const,
+    },
+    // "or" divider
+    dividerLine: { backgroundColor: "#E5E7EB" },
+    dividerText: { color: "#9CA3AF", fontSize: "0.8rem" },
+    // Social buttons (Google, etc.)
+    socialButtonsBlockButton: {
+      border: "1px solid #E5E7EB",
+      borderRadius: "8px",
+      padding: "11px",
+      color: "#1A1A2E",
+      fontSize: "0.9rem",
+      fontWeight: "500",
+      backgroundColor: "#ffffff",
+    },
+    socialButtonsBlockButtonText: {
+      color: "#1A1A2E",
+      fontWeight: "500",
+    },
+    // Inline links Clerk renders mid-flow (e.g. "Back", "Try another method")
+    footerActionLink: { color: "#0D9488", fontWeight: "500" },
+    identityPreviewText: { color: "#1A1A2E" },
+    identityPreviewEditButtonIcon: { color: "#0D9488" },
+    // OTP / verification inputs
+    otpCodeFieldInput: {
+      border: "1px solid #E5E7EB",
+      borderRadius: "8px",
+    },
+  },
+};
+
 const Auth = () => {
+  const { isSignedIn } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const [mode, setMode] = useState<Mode>("signup");
-  const [showPwd, setShowPwd] = useState(false);
-  const [googleNote, setGoogleNote] = useState(false);
 
+  // Initialise mode from URL param so direct links like /auth?mode=login work
+  const [mode, setMode] = useState<Mode>(
+    params.get("mode") === "login" ? "login" : "signup"
+  );
+
+  // Sync mode when the URL param changes (e.g. navigating between pages)
   useEffect(() => {
-    if (params.get("mode") === "login") setMode("login");
-    if (params.get("mode") === "signup") setMode("signup");
+    const m = params.get("mode");
+    if (m === "login") setMode("login");
+    else if (m === "signup") setMode("signup");
   }, [params]);
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    navigate("/quiz");
-  };
-
-  const tealBtn: React.CSSProperties = {
-    backgroundColor: "#0D9488",
-    color: "#fff",
-    borderRadius: 8,
-    padding: "12px",
-    width: "100%",
-    fontWeight: 600,
-    fontSize: "0.95rem",
-  };
-
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    border: "1px solid #E5E7EB",
-    borderRadius: 8,
-    padding: "10px 12px",
-    fontSize: "0.9rem",
-    outline: "none",
-    backgroundColor: "#fff",
-  };
+  // Redirect to /quiz as soon as Clerk reports the user is signed in.
+  // This fires both after a fresh sign-in/sign-up and if the user visits
+  // /auth while already authenticated.
+  useEffect(() => {
+    if (isSignedIn) {
+      navigate("/quiz", { replace: true });
+    }
+  }, [isSignedIn, navigate]);
 
   return (
     <div
@@ -48,7 +122,11 @@ const Auth = () => {
       style={{ backgroundColor: "#FAF7F2" }}
     >
       <SEO
-        title={mode === "signup" ? "Sign up — Briefly Brilliant" : "Log in — Briefly Brilliant"}
+        title={
+          mode === "signup"
+            ? "Sign up — Briefly Brilliant"
+            : "Log in — Briefly Brilliant"
+        }
         description={
           mode === "signup"
             ? "Create your Briefly Brilliant account to get score-matched LSAT resources tailored to your plateau."
@@ -56,6 +134,7 @@ const Auth = () => {
         }
         path="/auth"
       />
+
       <div
         className="bg-white w-full"
         style={{
@@ -65,6 +144,7 @@ const Auth = () => {
           boxShadow: "0 4px 32px rgba(0,0,0,0.08)",
         }}
       >
+        {/* Title */}
         <h1
           className="text-center"
           style={{
@@ -74,16 +154,15 @@ const Auth = () => {
             fontWeight: 700,
           }}
         >
-          {mode === "signup" ? "Sign up to Briefly Brilliant" : "Log in to Briefly Brilliant"}
+          {mode === "signup"
+            ? "Sign up to Briefly Brilliant"
+            : "Log in to Briefly Brilliant"}
         </h1>
 
-        {/* Tabs */}
+        {/* Tab toggle — Sign up | Log in */}
         <div
           className="mt-6 flex p-1"
-          style={{
-            backgroundColor: "#F3F4F6",
-            borderRadius: 99,
-          }}
+          style={{ backgroundColor: "#F3F4F6", borderRadius: 99 }}
         >
           {(["signup", "login"] as Mode[]).map((m) => {
             const active = mode === m;
@@ -99,6 +178,9 @@ const Auth = () => {
                   fontWeight: 600,
                   backgroundColor: active ? "#0D9488" : "transparent",
                   color: active ? "#fff" : "#6B7280",
+                  border: "none",
+                  cursor: "pointer",
+                  transition: "background-color 0.15s, color 0.15s",
                 }}
               >
                 {m === "signup" ? "Sign up" : "Log in"}
@@ -107,129 +189,14 @@ const Auth = () => {
           })}
         </div>
 
-        <form onSubmit={submit} className="mt-6 space-y-3">
-          {mode === "signup" && (
-            <input style={inputStyle} type="text" placeholder="Full name" aria-label="Full name" required />
-          )}
-          <input style={inputStyle} type="email" placeholder="Email" aria-label="Email" required />
-          <div style={{ position: "relative" }}>
-            <input
-              style={{ ...inputStyle, paddingRight: 40 }}
-              type={showPwd ? "text" : "password"}
-              placeholder="Password"
-              aria-label="Password"
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPwd((s) => !s)}
-              style={{
-                position: "absolute",
-                right: 10,
-                top: "50%",
-                transform: "translateY(-50%)",
-                color: "#9CA3AF",
-              }}
-              aria-label="Toggle password visibility"
-            >
-              {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </div>
-
-          {mode === "login" && (
-            <div className="text-right">
-              <a
-                href="#"
-                onClick={(e) => e.preventDefault()}
-                style={{ color: "#9CA3AF", fontSize: "0.8rem" }}
-              >
-                Forgot password?
-              </a>
-            </div>
-          )}
-
-          <button type="submit" style={tealBtn}>
-            {mode === "signup" ? "Create Account" : "Sign In"}
-          </button>
-        </form>
-
-        <p
-          className="mt-3 text-center"
-          style={{ color: "#9CA3AF", fontSize: "0.8rem" }}
-        >
+        {/* Clerk embedded component — swaps when the tab changes */}
+        <div className="mt-6">
           {mode === "signup" ? (
-            <>
-              Already have an account?{" "}
-              <button
-                onClick={() => setMode("login")}
-                style={{ color: "#0D9488", fontWeight: 600 }}
-              >
-                Log in
-              </button>
-            </>
+            <SignUp appearance={clerkAppearance} afterSignUpUrl="/quiz" />
           ) : (
-            <>
-              Don't have an account?{" "}
-              <button
-                onClick={() => setMode("signup")}
-                style={{ color: "#0D9488", fontWeight: 600 }}
-              >
-                Sign up
-              </button>
-            </>
+            <SignIn appearance={clerkAppearance} afterSignInUrl="/quiz" />
           )}
-        </p>
-
-        <div className="my-5 flex items-center gap-3">
-          <div className="flex-1" style={{ height: 1, backgroundColor: "#E5E7EB" }} />
-          <span style={{ color: "#9CA3AF", fontSize: "0.8rem" }}>or</span>
-          <div className="flex-1" style={{ height: 1, backgroundColor: "#E5E7EB" }} />
         </div>
-
-        <button
-          type="button"
-          onClick={() => setGoogleNote(true)}
-          className="flex items-center justify-center gap-2"
-          style={{
-            width: "100%",
-            border: "1px solid #E5E7EB",
-            borderRadius: 8,
-            padding: 11,
-            color: "#1A1A2E",
-            fontSize: "0.9rem",
-            fontWeight: 500,
-            backgroundColor: "#fff",
-          }}
-        >
-          <span
-            className="flex items-center justify-center"
-            style={{
-              width: 18,
-              height: 18,
-              borderRadius: 99,
-              backgroundColor: "#fff",
-              border: "1px solid #E5E7EB",
-              fontSize: 11,
-              fontWeight: 700,
-              color: "#4285F4",
-            }}
-          >
-            G
-          </span>
-          Continue with Google
-        </button>
-        {googleNote && (
-          <p className="mt-2 text-center" style={{ color: "#9CA3AF", fontSize: "0.75rem" }}>
-            Google auth coming soon
-          </p>
-        )}
-
-        <p
-          className="mt-6 text-center"
-          style={{ color: "#9CA3AF", fontSize: "0.75rem" }}
-        >
-          By continuing, you agree to our Terms and Privacy Policy.
-        </p>
       </div>
     </div>
   );
