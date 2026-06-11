@@ -1,9 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useUser } from "@clerk/clerk-react";
 import { ArrowLeft, ArrowRight, Brain, BookOpenText, Check, Timer, Layers, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import { SEO } from "@/components/SEO";
+import { useSupabaseClient } from "@/lib/supabaseClient";
+import { syncUser } from "@/lib/syncUser";
 import {
   WeeklyHours,
   TestDate,
@@ -98,6 +101,8 @@ const ScoreSlider = ({
 
 const Quiz = () => {
   const navigate = useNavigate();
+  const { isSignedIn, user } = useUser();
+  const supabase = useSupabaseClient();
   const [step, setStep] = useState(1);
   const [currentScore, setCurrentScore] = useState<number | "no_score">(155);
   const [targetScore, setTargetScore] = useState(165);
@@ -109,6 +114,12 @@ const Quiz = () => {
   const [experience, setExperience] = useState<Experience | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isSignedIn && user) {
+      syncUser(supabase, user.id, user.primaryEmailAddress?.emailAddress);
+    }
+  }, [isSignedIn, user, supabase]);
 
   const canNext = useMemo(() => {
     switch (step) {
@@ -153,7 +164,7 @@ const Quiz = () => {
     setSubmitting(true);
     try {
       const res = await fetch(
-        "https://puivlxldzeinfpljixme.supabase.co/functions/v1/recommend-resources",
+        "https://kmgndbewlfshtedavebd.supabase.co/functions/v1/recommend-resources",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
