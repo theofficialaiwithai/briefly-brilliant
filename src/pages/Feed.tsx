@@ -2,13 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Bookmark,
-  Check,
+  CheckCircle,
   ChevronUp,
   Clock,
   Loader2,
-  SkipForward,
   Sparkles,
+  X,
 } from "lucide-react";
+import { useUser } from "@clerk/clerk-react";
 import { Logo } from "@/components/Logo";
 import { RedditPreview } from "@/components/RedditPreview";
 import { SEO } from "@/components/SEO";
@@ -42,6 +43,9 @@ type DbRow = {
 
 // Resource augmented with the DB-only field we need locally
 type FeedResource = Resource & { redditSearchTerm?: string };
+
+type FeedbackAction = "completed" | "saved" | "skipped";
+type ActionResult = "ok" | "error" | "unauthenticated";
 
 function mapSection(sf: string | null): Section | "All" {
   switch (sf) {
@@ -81,7 +85,6 @@ function mapRow(row: DbRow): FeedResource {
   };
 }
 
-type CardStatus = "idle" | "completed" | "skipped" | "saved";
 type MoveAnswer = "yes" | "little" | "not-yet";
 
 type SectionFilter = "All" | Section;
@@ -203,10 +206,66 @@ const FilterGroup = ({
   </div>
 );
 
-const ResourceRow = ({ r, redditQuery }: { r: Resource; redditQuery?: string }) => {
+const ACTION_CONFIG: {
+  id: FeedbackAction;
+  label: string;
+  Icon: React.ComponentType<{ className?: string }>;
+  activeStyle: React.CSSProperties;
+  defaultStyle: React.CSSProperties;
+}[] = [
+  {
+    id: "completed",
+    label: "Completed",
+    Icon: CheckCircle,
+    activeStyle: { background: "#F0FDF4", border: "1px solid #16A34A", color: "#16A34A" },
+    defaultStyle: { background: "white", border: "1px solid #E5E7EB", color: "#1A1A2E" },
+  },
+  {
+    id: "saved",
+    label: "Saved",
+    Icon: Bookmark,
+    activeStyle: { background: "#FFF7ED", border: "1px solid #D97706", color: "#D97706" },
+    defaultStyle: { background: "white", border: "1px solid #E5E7EB", color: "#1A1A2E" },
+  },
+  {
+    id: "skipped",
+    label: "Skip",
+    Icon: X,
+    activeStyle: { background: "#F3F4F6", border: "1px solid #9CA3AF", color: "#9CA3AF" },
+    defaultStyle: { background: "white", border: "1px solid #E5E7EB", color: "#6B7280" },
+  },
+];
+
+const ResourceRow = ({
+  r,
+  redditQuery,
+  currentAction,
+  onAction,
+}: {
+  r: Resource;
+  redditQuery?: string;
+  currentAction: FeedbackAction | null;
+  onAction: (resourceId: string, action: FeedbackAction) => Promise<ActionResult>;
+}) => {
   const [upvoted, setUpvoted] = useState(false);
-  const [status, setStatus] = useState<CardStatus>("idle");
   const [move, setMove] = useState<MoveAnswer | null>(null);
+  const [hint, setHint] = useState<"signin" | "error" | null>(null);
+
+  // Clear score-move question when user un-completes
+  useEffect(() => {
+    if (currentAction !== "completed") setMove(null);
+  }, [currentAction]);
+
+  const handleClick = async (action: FeedbackAction) => {
+    const result = await onAction(r.id, action);
+    if (result === "unauthenticated") {
+      setHint("signin");
+      setTimeout(() => setHint(null), 2000);
+    } else if (result === "error") {
+      setHint("error");
+      setTimeout(() => setHint(null), 3000);
+    }
+  };
 
   const bandText = `${r.scoreMin}–${r.scoreMax}`;
 
@@ -268,52 +327,50 @@ const ResourceRow = ({ r, redditQuery }: { r: Resource; redditQuery?: string }) 
             {r.time}
           </div>
         </div>
-
-        {/* Right actions */}
-        <div className="flex shrink-0 flex-col gap-1.5">
-          <button
-            onClick={() => setStatus("completed")}
-            className={cn(
-              "inline-flex h-9 w-9 items-center justify-center rounded-lg border transition-colors",
-              status === "completed"
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-background text-muted-foreground hover:border-foreground/20 hover:text-foreground"
-            )}
-            title="Completed"
-            aria-label="Mark as completed"
-          >
-            <Check className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => setStatus("skipped")}
-            className={cn(
-              "inline-flex h-9 w-9 items-center justify-center rounded-lg border transition-colors",
-              status === "skipped"
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-background text-muted-foreground hover:border-foreground/20 hover:text-foreground"
-            )}
-            title="Skip"
-            aria-label="Skip resource"
-          >
-            <SkipForward className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => setStatus("saved")}
-            className={cn(
-              "inline-flex h-9 w-9 items-center justify-center rounded-lg border transition-colors",
-              status === "saved"
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-background text-muted-foreground hover:border-foreground/20 hover:text-foreground"
-            )}
-            title="Save"
-            aria-label="Save resource"
-          >
-            <Bookmark className="h-4 w-4" />
-          </button>
-        </div>
       </div>
 
-      {status === "completed" && (
+      {/* Action buttons */}
+      <div className="mt-4 flex flex-wrap gap-2">
+        {ACTION_CONFIG.map(({ id, label, Icon, activeStyle, defaultStyle }) => {
+          const isActive = currentAction === id;
+          return (
+            <button
+              key={id}
+              onClick={() => handleClick(id)}
+              style={{
+                ...(isActive ? activeStyle : defaultStyle),
+                borderRadius: 8,
+                padding: "8px 14px",
+                fontSize: "0.85rem",
+                fontWeight: 500,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                transition: "all 0.15s",
+                cursor: "pointer",
+              }}
+            >
+              <Icon className="h-4 w-4" />
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Inline hint: sign-in prompt or error */}
+      {hint && (
+        <p
+          className="mt-2 text-xs"
+          style={{ color: hint === "signin" ? "#6B7280" : "#DC2626" }}
+        >
+          {hint === "signin"
+            ? "Sign in to track your progress"
+            : "Couldn't save — please try again."}
+        </p>
+      )}
+
+      {/* Did your score move? (shown when this resource is marked completed) */}
+      {currentAction === "completed" && (
         <div className="mt-4 rounded-xl border border-border bg-primary-soft/60 p-3">
           {move === null ? (
             <div className="flex flex-wrap items-center gap-3">
@@ -376,6 +433,7 @@ const ResourceRow = ({ r, redditQuery }: { r: Resource; redditQuery?: string }) 
 };
 
 const Feed = () => {
+  const { isSignedIn, user } = useUser();
   const quiz = useMemo(() => loadQuizState(), []);
 
   const KNOWN_SECTIONS: Section[] = [
@@ -397,12 +455,14 @@ const Feed = () => {
   const [resources, setResources] = useState<FeedResource[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
+  const [feedbackMap, setFeedbackMap] = useState<Map<string, FeedbackAction>>(new Map());
   const [sectionF, setSectionF] = useState<SectionFilter>(initialSection);
   const [typeF, setTypeF] = useState<TypeFilter>(initialType);
   const [sourceF, setSourceF] = useState<SourceFilter>("All");
   const [bandF, setBandF] = useState<BandFilter>(initialBand);
   const [sort, setSort] = useState<Sort>(quiz ? "best" : "upvotes");
 
+  // Fetch resources
   useEffect(() => {
     let cancelled = false;
     supabase
@@ -419,6 +479,71 @@ const Feed = () => {
       });
     return () => { cancelled = true; };
   }, []);
+
+  // Fetch existing feedback for signed-in users
+  useEffect(() => {
+    if (!isSignedIn || !user) return;
+    let cancelled = false;
+    (supabase as any)
+      .from("feedback")
+      .select("resource_id, action")
+      .eq("clerk_id", user.id)
+      .then(({ data }: { data: { resource_id: string; action: string }[] | null }) => {
+        if (cancelled || !data) return;
+        setFeedbackMap(
+          new Map(data.map((f) => [f.resource_id, f.action as FeedbackAction]))
+        );
+      });
+    return () => { cancelled = true; };
+  }, [isSignedIn, user?.id]);
+
+  // Handle action button clicks — optimistic update with revert on failure
+  const handleFeedbackAction = async (
+    resourceId: string,
+    action: FeedbackAction
+  ): Promise<ActionResult> => {
+    if (!isSignedIn || !user) return "unauthenticated";
+
+    const prevMap = new Map(feedbackMap);
+    const currentAction = feedbackMap.get(resourceId) ?? null;
+    const toggling = currentAction === action;
+
+    // Optimistic update
+    setFeedbackMap((prev) => {
+      const next = new Map(prev);
+      if (toggling) {
+        next.delete(resourceId);
+      } else {
+        next.set(resourceId, action);
+      }
+      return next;
+    });
+
+    try {
+      // Delete existing action for this resource (if any)
+      if (currentAction) {
+        const { error } = await (supabase as any)
+          .from("feedback")
+          .delete()
+          .eq("clerk_id", user.id)
+          .eq("resource_id", resourceId)
+          .eq("action", currentAction);
+        if (error) throw error;
+      }
+      // Insert new action (unless toggling off)
+      if (!toggling) {
+        const { error } = await (supabase as any)
+          .from("feedback")
+          .insert({ clerk_id: user.id, resource_id: resourceId, action });
+        if (error) throw error;
+      }
+      return "ok";
+    } catch {
+      // Revert optimistic update
+      setFeedbackMap(prevMap);
+      return "error";
+    }
+  };
 
   const filtered = useMemo(() => {
     let list = resources.filter((r) => {
@@ -612,6 +737,8 @@ const Feed = () => {
                     key={r.id}
                     r={r}
                     redditQuery={redditQueryMap.get(r.id)}
+                    currentAction={feedbackMap.get(r.id) ?? null}
+                    onAction={handleFeedbackAction}
                   />
                 ))
               )}
