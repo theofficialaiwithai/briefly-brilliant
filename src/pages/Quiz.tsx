@@ -46,10 +46,11 @@ const DATE_OPTIONS: { value: TestDate; label: string; sub: string }[] = [
 ];
 
 const BUDGET_OPTIONS: { value: Budget; label: string; sub: string }[] = [
-  { value: "free", label: "Free only", sub: "I want the best free resources" },
-  { value: "50", label: "Up to $50", sub: "Open to affordable tools" },
-  { value: "200", label: "Up to $200", sub: "Willing to invest in a course" },
-  { value: "any", label: "Whatever it takes", sub: "Show me the best, paid or free" },
+  { value: "free", label: "Free only", sub: "I'll stick to free resources" },
+  { value: "under_200", label: "Under $200", sub: "Books, free tiers, and low-cost prep" },
+  { value: "200_500", label: "$200 – $500", sub: "Self-paced online courses" },
+  { value: "500_1500", label: "$500 – $1,500", sub: "Live online courses" },
+  { value: "1500_plus", label: "$1,500+", sub: "Private tutoring or premium programs" },
 ];
 
 const LEARNING_FORMAT_OPTIONS: { value: LearningFormat; sub: string }[] = [

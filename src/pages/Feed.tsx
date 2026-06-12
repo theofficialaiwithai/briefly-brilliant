@@ -35,6 +35,7 @@ type DbRow = {
   category: string | null;
   section_focus: string | null;
   cost_type: string | null;
+  cost_tier: string | null;
   price_range: string | null;
   best_score_range: string | null;
   weekly_hours: string | null;
@@ -44,7 +45,7 @@ type DbRow = {
 };
 
 // Resource augmented with DB-only fields we need locally
-type FeedResource = Resource & { redditSearchTerm?: string; url?: string };
+type FeedResource = Resource & { redditSearchTerm?: string; url?: string; costTier?: string };
 
 type FeedbackAction = "completed" | "saved" | "skipped";
 type ActionResult = "ok" | "error" | "unauthenticated";
@@ -85,6 +86,7 @@ function mapRow(row: DbRow): FeedResource {
     upvotes: 0,
     redditSearchTerm: row.reddit_search_term ?? undefined,
     url: row.url ?? undefined,
+    costTier: row.cost_tier ?? undefined,
   };
 }
 
@@ -119,7 +121,19 @@ function bestMatchScore(r: Resource, quiz: ReturnType<typeof loadQuizState>): nu
     }
   }
 
-  if (quiz.budget === "free" && r.type === "Free") score += 1;
+  const budgetOrder = ['free', 'under_200', '200_500', '500_1500', '1500_plus'];
+  const userBudgetIndex = budgetOrder.indexOf(quiz.budget);
+  const resourceBudgetIndex = budgetOrder.indexOf(r.costTier ?? '');
+  if (resourceBudgetIndex !== -1 && userBudgetIndex !== -1) {
+    if (resourceBudgetIndex <= userBudgetIndex) {
+      score += 2;
+      if (r.type === "Free" && quiz.budget === "free") score += 1;
+    } else if (resourceBudgetIndex === userBudgetIndex + 1) {
+      // neutral — just over budget
+    } else {
+      score -= 2;
+    }
+  }
 
   return score;
 }
@@ -560,7 +574,7 @@ const Feed = () => {
     let cancelled = false;
     supabase
       .from("lsat_resources")
-      .select("id, resource_name, category, section_focus, cost_type, price_range, best_score_range, weekly_hours, description, reddit_search_term, url")
+      .select("id, resource_name, category, section_focus, cost_type, cost_tier, price_range, best_score_range, weekly_hours, description, reddit_search_term, url")
       .then(({ data, error }) => {
         if (cancelled) return;
         if (error || !data) {
@@ -644,10 +658,11 @@ const Feed = () => {
       if (sectionF !== "All" && r.section !== sectionF && r.section !== "All")
         return false;
       if (typeF !== "All" && r.type !== typeF) return false;
-      if (quiz && r.type === "Paid") {
-        if (quiz.budget === "free") return false;
-        if (quiz.budget === "50" && (r.price ?? 0) > 50) return false;
-        if (quiz.budget === "200" && (r.price ?? 0) > 200) return false;
+      if (quiz && r.costTier) {
+        const budgetOrder = ['free', 'under_200', '200_500', '500_1500', '1500_plus'];
+        const userIdx = budgetOrder.indexOf(quiz.budget);
+        const resIdx = budgetOrder.indexOf(r.costTier);
+        if (userIdx !== -1 && resIdx !== -1 && resIdx > userIdx) return false;
       }
       if (sourceF !== "All" && r.source !== sourceF) return false;
       if (bandF !== "All" && !resourceBand(r).includes(bandF)) return false;

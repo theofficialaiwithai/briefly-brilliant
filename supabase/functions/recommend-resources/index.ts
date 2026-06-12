@@ -46,13 +46,21 @@ serve(async (req) => {
         ? "No practice test taken yet (complete beginner)"
         : `Current score: ${currentScore}, Target score: ${targetScore} (gap of ${Number(targetScore) - Number(currentScore)} points)`;
 
+    const budgetLabels: Record<string, string> = {
+      free: 'free resources only',
+      under_200: 'budget under $200 (books and low-cost prep)',
+      '200_500': 'budget $200–$500 (self-paced courses)',
+      '500_1500': 'budget $500–$1,500 (live online courses)',
+      '1500_plus': 'budget $1,500+ (open to private tutoring and premium programs)',
+    };
+
     const studentProfile = `
 STUDENT PROFILE:
 - ${scoreGap}
 - Biggest section obstacle: ${sectionObstacle}
 - Weekly study hours available: ${weeklyHours}
 - Test timeline: ${testTimeline}
-- Budget for study materials: ${budget}
+- Budget: ${budgetLabels[budget] || 'not specified'}
 - Preferred learning format: ${learningFormat}
 - LSAT experience: ${experience}
 `;
@@ -70,13 +78,18 @@ STUDENT PROFILE:
         system: `You are an expert LSAT prep advisor. Your job is to analyze a student's profile and recommend exactly 5 LSAT resources from the provided list that best match their needs.
 
 REASONING PROCESS — apply in this order:
-1. HARD FILTER: Eliminate any resource whose cost exceeds the student's budget
+1. HARD FILTER: Eliminate any resource whose cost exceeds the student's budget. A student with budget 'free resources only' should only receive free resources. A student with 'budget under $200' should not receive resources with cost_tier '500_1500' or '1500_plus'. Always treat budget as a hard constraint, not just a preference.
 2. SECTION MATCH: Prioritize resources targeting the student's obstacle section (or "All")
 3. SCORE MATCH: Prefer resources appropriate for the student's current score range and gap size
 4. TIMELINE MATCH: Prefer resources suited to the student's test timeline
 5. FORMAT MATCH: Strongly prefer resources that match the student's preferred learning format
 6. EXPERIENCE MATCH: If retaker, prefer resources focused on diagnosis and targeted improvement
 7. HOURS MATCH: Prefer resources appropriate for the student's weekly study time
+
+When scoring resources, heavily penalize resources whose cost_tier exceeds the student's budget.
+A student with budget 'free resources only' should only receive free resources (cost_type = 'Free').
+A student with 'budget under $200' should not receive resources with cost_tier '500_1500' or '1500_plus'.
+Always respect budget as a hard constraint, not just a preference.
 
 Return ONLY a valid JSON array. No explanation text outside the JSON. Format:
 [
