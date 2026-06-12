@@ -106,11 +106,11 @@ const Quiz = () => {
   const [step, setStep] = useState(1);
   const [currentScore, setCurrentScore] = useState<number | "no_score">(155);
   const [targetScore, setTargetScore] = useState(165);
-  const [section, setSection] = useState<SectionObstacle | null>(null);
+  const [sections, setSections] = useState<SectionObstacle[]>([]);
   const [weeklyHours, setWeeklyHours] = useState<WeeklyHours | null>(null);
   const [testDate, setTestDate] = useState<TestDate | null>(null);
   const [budget, setBudget] = useState<Budget | null>(null);
-  const [learningFormat, setLearningFormat] = useState<LearningFormat | null>(null);
+  const [learningFormats, setLearningFormats] = useState<LearningFormat[]>([]);
   const [experience, setExperience] = useState<Experience | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -134,7 +134,7 @@ const Quiz = () => {
       case 2:
         return currentScore === "no_score" ? targetScore >= 120 : targetScore >= currentScore;
       case 3:
-        return section !== null;
+        return sections.length > 0;
       case 4:
         return weeklyHours !== null;
       case 5:
@@ -142,13 +142,13 @@ const Quiz = () => {
       case 6:
         return budget !== null;
       case 7:
-        return learningFormat !== null;
+        return learningFormats.length > 0;
       case 8:
         return experience !== null;
       default:
         return false;
     }
-  }, [step, currentScore, targetScore, section, weeklyHours, testDate, budget, learningFormat, experience]);
+  }, [step, currentScore, targetScore, sections, weeklyHours, testDate, budget, learningFormats, experience]);
 
   const handleNext = async () => {
     if (step < TOTAL_STEPS) {
@@ -158,16 +158,21 @@ const Quiz = () => {
     const state: QuizState = {
       currentScore,
       targetScore,
-      section: section!,
+      section: sections,
       weeklyHours: weeklyHours!,
       testDate: testDate!,
       budget: budget!,
-      learningFormat: learningFormat!,
+      learningFormat: learningFormats,
       experience: experience!,
     };
     saveQuizState(state);
     setSubmitError(null);
     setSubmitting(true);
+    // Collapse multi-selections to a string the AI edge function can process
+    const sectionForApi =
+      sections.length === 1 ? sections[0] : sections.join(", ");
+    const formatForApi =
+      learningFormats.length === 1 ? learningFormats[0] : learningFormats.join(", ");
     try {
       const res = await fetch(
         "https://kmgndbewlfshtedavebd.supabase.co/functions/v1/recommend-resources",
@@ -177,11 +182,11 @@ const Quiz = () => {
           body: JSON.stringify({
             currentScore,
             targetScore,
-            sectionObstacle: section,
+            sectionObstacle: sectionForApi,
             weeklyHours,
             testTimeline: testDate,
             budget,
-            learningFormat,
+            learningFormat: formatForApi,
             experience,
           }),
         }
@@ -315,14 +320,25 @@ const Quiz = () => {
               <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
                 Which section is your biggest obstacle right now?
               </h1>
-              <div className="mt-8 grid gap-3">
-                {SECTION_OPTIONS.map((opt) => {
-                  const active = section === opt.value;
+              <p className="mt-2 text-sm text-muted-foreground">Select all that apply.</p>
+              <div className="mt-6 grid gap-3">
+                {SECTION_OPTIONS.filter((o) => o.value !== "I struggle with everything equally").map((opt) => {
+                  const active = sections.includes(opt.value);
                   return (
                     <button
                       key={opt.value}
                       type="button"
-                      onClick={() => setSection(opt.value)}
+                      onClick={() => {
+                        setSections((prev) => {
+                          const without = prev.filter((s) => s !== "I struggle with everything equally");
+                          const next = without.includes(opt.value)
+                            ? without.filter((s) => s !== opt.value)
+                            : [...without, opt.value];
+                          const specific: SectionObstacle[] = ["Logical Reasoning", "Reading Comprehension", "Pacing & time management"];
+                          if (specific.every((s) => next.includes(s))) return ["I struggle with everything equally"];
+                          return next;
+                        });
+                      }}
                       className={cn(
                         "flex items-center gap-4 rounded-xl border bg-background p-5 text-left transition-all",
                         active
@@ -330,12 +346,7 @@ const Quiz = () => {
                           : "border-border hover:border-foreground/20 hover:bg-muted/40"
                       )}
                     >
-                      <span
-                        className={cn(
-                          "flex h-11 w-11 items-center justify-center rounded-lg transition-colors",
-                          active ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
-                        )}
-                      >
+                      <span className={cn("flex h-11 w-11 items-center justify-center rounded-lg transition-colors", active ? "bg-primary text-primary-foreground" : "bg-muted text-foreground")}>
                         <opt.icon className="h-5 w-5" />
                       </span>
                       <span className="flex-1">
@@ -346,6 +357,36 @@ const Quiz = () => {
                     </button>
                   );
                 })}
+                <div className="flex items-center gap-3 py-1">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-xs text-muted-foreground">or</span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+                {(() => {
+                  const opt = SECTION_OPTIONS.find((o) => o.value === "I struggle with everything equally")!;
+                  const active = sections.includes("I struggle with everything equally");
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => setSections(active ? [] : ["I struggle with everything equally"])}
+                      className={cn(
+                        "flex items-center gap-4 rounded-xl border bg-background p-5 text-left transition-all",
+                        active
+                          ? "border-primary bg-primary-soft shadow-card"
+                          : "border-border hover:border-foreground/20 hover:bg-muted/40"
+                      )}
+                    >
+                      <span className={cn("flex h-11 w-11 items-center justify-center rounded-lg transition-colors", active ? "bg-primary text-primary-foreground" : "bg-muted text-foreground")}>
+                        <opt.icon className="h-5 w-5" />
+                      </span>
+                      <span className="flex-1">
+                        <span className="block font-semibold text-foreground">{opt.value}</span>
+                        <span className="block text-sm text-muted-foreground">{opt.blurb}</span>
+                      </span>
+                      {active && <Check className="h-5 w-5 text-primary" />}
+                    </button>
+                  );
+                })()}
               </div>
             </>
           )}
@@ -441,26 +482,67 @@ const Quiz = () => {
               <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
                 How do you prefer to learn?
               </h1>
-              <div className="mt-8 grid gap-3">
-                {LEARNING_FORMAT_OPTIONS.map((o) => {
-                  const active = learningFormat === o.value;
+              <p className="mt-2 text-sm text-muted-foreground">Select all styles that work for you.</p>
+              <div className="mt-6 grid gap-3">
+                {LEARNING_FORMAT_OPTIONS.filter((o) => o.value !== "A mix of everything").map((o) => {
+                  const active = learningFormats.includes(o.value);
                   return (
                     <button
                       key={o.value}
                       type="button"
-                      onClick={() => setLearningFormat(o.value)}
+                      onClick={() => {
+                        setLearningFormats((prev) => {
+                          const without = prev.filter((f) => f !== "A mix of everything");
+                          const next = without.includes(o.value)
+                            ? without.filter((f) => f !== o.value)
+                            : [...without, o.value];
+                          const specific: LearningFormat[] = ["Video lessons", "Books & reading", "Live instruction with a teacher", "Drilling with lots of practice"];
+                          if (specific.every((f) => next.includes(f))) return ["A mix of everything"];
+                          return next;
+                        });
+                      }}
                       className={cn(
-                        "rounded-xl border p-4 text-left transition-all",
+                        "flex items-center justify-between rounded-xl border p-4 text-left transition-all",
                         active
                           ? "border-primary bg-primary-soft shadow-card"
                           : "border-border bg-background hover:border-foreground/20 hover:bg-muted/40"
                       )}
                     >
-                      <div className="font-semibold text-foreground">{o.value}</div>
-                      <div className="text-sm text-muted-foreground">{o.sub}</div>
+                      <div>
+                        <div className="font-semibold text-foreground">{o.value}</div>
+                        <div className="text-sm text-muted-foreground">{o.sub}</div>
+                      </div>
+                      {active && <Check className="h-5 w-5 shrink-0 text-primary" />}
                     </button>
                   );
                 })}
+                <div className="flex items-center gap-3 py-1">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-xs text-muted-foreground">or</span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+                {(() => {
+                  const o = LEARNING_FORMAT_OPTIONS.find((f) => f.value === "A mix of everything")!;
+                  const active = learningFormats.includes("A mix of everything");
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => setLearningFormats(active ? [] : ["A mix of everything"])}
+                      className={cn(
+                        "flex items-center justify-between rounded-xl border p-4 text-left transition-all",
+                        active
+                          ? "border-primary bg-primary-soft shadow-card"
+                          : "border-border bg-background hover:border-foreground/20 hover:bg-muted/40"
+                      )}
+                    >
+                      <div>
+                        <div className="font-semibold text-foreground">{o.value}</div>
+                        <div className="text-sm text-muted-foreground">{o.sub}</div>
+                      </div>
+                      {active && <Check className="h-5 w-5 shrink-0 text-primary" />}
+                    </button>
+                  );
+                })()}
               </div>
             </>
           )}

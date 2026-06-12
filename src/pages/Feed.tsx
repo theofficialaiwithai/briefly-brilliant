@@ -88,8 +88,6 @@ function mapRow(row: DbRow): FeedResource {
   };
 }
 
-type MoveAnswer = "yes" | "little" | "not-yet";
-
 type SectionFilter = "All" | Section;
 type TypeFilter = "All" | ResourceType;
 type SourceFilter = "All" | Source;
@@ -101,10 +99,13 @@ function bestMatchScore(r: Resource, quiz: ReturnType<typeof loadQuizState>): nu
   let score = 0;
 
   const rs = r.section;
-  const qs = quiz.section;
+  const qs = quiz.section; // SectionObstacle[]
   if (rs === "All") {
     score += 1;
-  } else if (qs.toLowerCase() === rs.toLowerCase()) {
+  } else if (
+    qs.includes("I struggle with everything equally") ||
+    qs.some((s) => s.toLowerCase() === rs.toLowerCase())
+  ) {
     score += 2;
   }
 
@@ -251,15 +252,31 @@ const ResourceRow = ({
   onAction: (resourceId: string, action: FeedbackAction) => Promise<ActionResult>;
 }) => {
   const [upvoted, setUpvoted] = useState(false);
-  const [move, setMove] = useState<MoveAnswer | null>(null);
   const [hint, setHint] = useState<"signin" | "error" | null>(null);
 
-  // Clear score-move question when user un-completes
+  // Review flow state (shown after marking a resource completed)
+  const [reviewStep, setReviewStep] = useState(0);
+  // 0=not started, 1=score move, 2=rating, 3=recommend, 4=review text, 5=done
+  const [scoreMove, setScoreMove] = useState<string | null>(null);
+  const [rating, setRating] = useState<number | null>(null);
+  const [hoverRating, setHoverRating] = useState<number | null>(null);
+  const [wouldRecommend, setWouldRecommend] = useState<string | null>(null);
+  const [reviewText, setReviewText] = useState("");
+
+  // Reset review when action changes away from "completed"
   useEffect(() => {
-    if (currentAction !== "completed") setMove(null);
+    if (currentAction !== "completed") {
+      setReviewStep(0);
+      setScoreMove(null);
+      setRating(null);
+      setHoverRating(null);
+      setWouldRecommend(null);
+      setReviewText("");
+    }
   }, [currentAction]);
 
   const handleClick = async (action: FeedbackAction) => {
+    const isNewCompletion = action === "completed" && currentAction !== "completed";
     const result = await onAction(r.id, action);
     if (result === "unauthenticated") {
       setHint("signin");
@@ -267,6 +284,8 @@ const ResourceRow = ({
     } else if (result === "error") {
       setHint("error");
       setTimeout(() => setHint(null), 3000);
+    } else if (result === "ok" && isNewCompletion) {
+      setReviewStep(1);
     }
   };
 
@@ -385,25 +404,26 @@ const ResourceRow = ({
         </p>
       )}
 
-      {/* Did your score move? (shown when this resource is marked completed) */}
-      {currentAction === "completed" && (
+      {/* Sequential review flow (shown after marking completed) */}
+      {currentAction === "completed" && reviewStep >= 1 && (
         <div className="mt-4 rounded-xl border border-border bg-primary-soft/60 p-3">
-          {move === null ? (
+          {reviewStep === 5 ? (
+            <p className="inline-flex items-center gap-2 text-sm font-medium text-primary">
+              <Sparkles className="h-4 w-4" />
+              Thanks for your review — it helps other students find the right resources.
+            </p>
+          ) : reviewStep === 1 ? (
             <div className="flex flex-wrap items-center gap-3">
-              <p className="text-sm font-medium text-foreground">
-                Did your score move?
-              </p>
+              <p className="text-sm font-medium text-foreground">Did your score move?</p>
               <div className="flex flex-wrap gap-2">
-                {(
-                  [
-                    { v: "yes", label: "Yes" },
-                    { v: "little", label: "A little" },
-                    { v: "not-yet", label: "Not yet" },
-                  ] as { v: MoveAnswer; label: string }[]
-                ).map((opt) => (
+                {[
+                  { v: "yes", label: "Yes" },
+                  { v: "little", label: "A little" },
+                  { v: "not-yet", label: "Not yet" },
+                ].map((opt) => (
                   <button
                     key={opt.v}
-                    onClick={() => setMove(opt.v)}
+                    onClick={() => { setScoreMove(opt.v); setReviewStep(2); }}
                     className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
                   >
                     {opt.label}
@@ -411,12 +431,69 @@ const ResourceRow = ({
                 ))}
               </div>
             </div>
-          ) : (
-            <p className="inline-flex items-center gap-2 text-sm font-medium text-primary">
-              <Sparkles className="h-4 w-4" />
-              Thanks — that signal helps the next student.
-            </p>
-          )}
+          ) : reviewStep === 2 ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="text-sm font-medium text-foreground">Rate this resource</p>
+              <div className="flex gap-0.5">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    onClick={() => { setRating(star); setReviewStep(3); }}
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(null)}
+                    aria-label={`${star} star`}
+                    className="text-xl leading-none transition-colors"
+                    style={{ color: star <= (hoverRating ?? rating ?? 0) ? "#D97706" : "#D1D5DB" }}
+                  >
+                    ★
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : reviewStep === 3 ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="text-sm font-medium text-foreground">Would you recommend this?</p>
+              <div className="flex flex-wrap gap-2">
+                {["Yes", "Maybe", "No"].map((opt) => (
+                  <button
+                    key={opt}
+                    onClick={() => { setWouldRecommend(opt); setReviewStep(4); }}
+                    className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : reviewStep === 4 ? (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-foreground">Share a quick review <span className="font-normal text-muted-foreground">(optional)</span></p>
+              <textarea
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value.slice(0, 280))}
+                placeholder="What worked? What didn't? Future students will see this."
+                rows={2}
+                className="w-full resize-none rounded-lg border border-border bg-card px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-muted-foreground">{reviewText.length}/280</span>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setReviewStep(5)}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Skip
+                  </button>
+                  <button
+                    onClick={() => setReviewStep(5)}
+                    className="rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                  >
+                    Submit
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
         </div>
       )}
 
@@ -458,8 +535,8 @@ const Feed = () => {
     "Reading Comprehension",
   ];
   const initialSection: SectionFilter =
-    quiz && KNOWN_SECTIONS.includes(quiz.section as Section)
-      ? (quiz.section as Section)
+    quiz && quiz.section.length === 1 && KNOWN_SECTIONS.includes(quiz.section[0] as Section)
+      ? (quiz.section[0] as Section)
       : "All";
   const initialBand: BandFilter =
     quiz && typeof quiz.currentScore === "number"

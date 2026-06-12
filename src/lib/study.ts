@@ -46,11 +46,11 @@ export type Experience = "first_time" | "retaker";
 export type QuizState = {
   currentScore: number | "no_score";
   targetScore: number;
-  section: SectionObstacle;
+  section: SectionObstacle[];
   weeklyHours: WeeklyHours;
   testDate: TestDate;
   budget: Budget;
-  learningFormat: LearningFormat;
+  learningFormat: LearningFormat[];
   experience: Experience;
 };
 
@@ -65,7 +65,12 @@ export function saveQuizState(state: QuizState) {
 export function loadQuizState(): QuizState | null {
   try {
     const raw = sessionStorage.getItem(QUIZ_KEY);
-    return raw ? (JSON.parse(raw) as QuizState) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    // Backwards compat: old format stored single strings
+    if (typeof parsed.section === "string") parsed.section = [parsed.section];
+    if (typeof parsed.learningFormat === "string") parsed.learningFormat = [parsed.learningFormat];
+    return parsed as QuizState;
   } catch {
     return null;
   }
