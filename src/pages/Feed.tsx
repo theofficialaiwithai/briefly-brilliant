@@ -82,7 +82,37 @@ type SectionFilter = "All" | Section;
 type TypeFilter = "All" | ResourceType;
 type SourceFilter = "All" | Source;
 type BandFilter = "All" | ScoreBand;
-type Sort = "upvotes" | "newest" | "beginner";
+type Sort = "best" | "upvotes" | "newest" | "beginner";
+
+function bestMatchScore(r: Resource, quiz: ReturnType<typeof loadQuizState>): number {
+  if (!quiz) return 0;
+  let score = 0;
+
+  // Section: exact match = +2, resource applies to "All" = +1
+  const qs = quiz.section;
+  const rs = r.section;
+  if (rs === "All") {
+    score += 1;
+  } else if (
+    (qs === "Logical Reasoning" && rs === "Logical Reasoning") ||
+    (qs === "Reading Comprehension" && rs === "Reading Comprehension")
+  ) {
+    score += 2;
+  }
+
+  // Score range: user's score inside range = +2, within 10 pts of edge = +1
+  if (typeof quiz.currentScore === "number") {
+    const s = quiz.currentScore;
+    if (s >= r.scoreMin && s <= r.scoreMax) {
+      score += 2;
+    } else {
+      const gap = Math.min(Math.abs(s - r.scoreMin), Math.abs(s - r.scoreMax));
+      if (gap <= 10) score += 1;
+    }
+  }
+
+  return score;
+}
 
 const WORTH_IT: Record<string, { pct: number; count: number }> = {
   "1": { pct: 91, count: 214 },
@@ -367,7 +397,7 @@ const Feed = () => {
   const [typeF, setTypeF] = useState<TypeFilter>(initialType);
   const [sourceF, setSourceF] = useState<SourceFilter>("All");
   const [bandF, setBandF] = useState<BandFilter>(initialBand);
-  const [sort, setSort] = useState<Sort>("upvotes");
+  const [sort, setSort] = useState<Sort>(quiz ? "best" : "upvotes");
 
   useEffect(() => {
     let cancelled = false;
@@ -402,10 +432,10 @@ const Feed = () => {
       return true;
     });
 
+    if (sort === "best") list = [...list].sort((a, b) => bestMatchScore(b, quiz) - bestMatchScore(a, quiz));
     if (sort === "upvotes") list = [...list].sort((a, b) => b.upvotes - a.upvotes);
     if (sort === "newest") list = [...list].sort((a, b) => a.title.localeCompare(b.title));
-    if (sort === "beginner")
-      list = [...list].sort((a, b) => a.scoreMin - b.scoreMin);
+    if (sort === "beginner") list = [...list].sort((a, b) => a.scoreMin - b.scoreMin);
 
     return list;
   }, [resources, sectionF, typeF, sourceF, bandF, sort, quiz]);
@@ -512,6 +542,7 @@ const Feed = () => {
                 <span className="mr-1 text-muted-foreground">Sort by:</span>
                 {(
                   [
+                    { v: "best", label: "Best Match" },
                     { v: "upvotes", label: "Most Upvoted" },
                     { v: "newest", label: "Newest" },
                     { v: "beginner", label: "Best for Beginners" },
