@@ -1,17 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   Bookmark,
   Check,
   ChevronUp,
   Clock,
+  Loader2,
   SkipForward,
   Sparkles,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { SEO } from "@/components/SEO";
 import {
-  SEED_RESOURCES,
   Resource,
   Section,
   ResourceType,
@@ -21,7 +21,59 @@ import {
   scoreToBand,
   sourceClasses,
 } from "@/lib/study";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+
+// ── DB → Resource mapping ────────────────────────────────────────────────────
+
+type DbRow = {
+  id: string;
+  resource_name: string | null;
+  category: string | null;
+  section_focus: string | null;
+  cost_type: string | null;
+  price_range: string | null;
+  best_score_range: string | null;
+  weekly_hours: string | null;
+  description: string | null;
+};
+
+function mapSection(sf: string | null): Section | "All" {
+  switch (sf) {
+    case "LR": return "Logical Reasoning";
+    case "RC": return "Reading Comprehension";
+    case "LG (Legacy)": return "Logic Games";
+    default: return "All";
+  }
+}
+
+function parseScoreRange(range: string | null): { min: number; max: number } {
+  const nums = (range ?? "").match(/\d+/g);
+  if (!nums || nums.length < 2) return { min: 120, max: 180 };
+  return { min: parseInt(nums[0]), max: parseInt(nums[1]) };
+}
+
+function parsePrice(priceRange: string | null): number {
+  const match = (priceRange ?? "").match(/\$?([\d,]+)/);
+  return match ? parseInt(match[1].replace(",", "")) : 0;
+}
+
+function mapRow(row: DbRow): Resource {
+  const { min, max } = parseScoreRange(row.best_score_range);
+  return {
+    id: row.id,
+    title: row.resource_name ?? "Untitled",
+    source: (row.category ?? "Other") as Source,
+    reason: row.description ?? "",
+    time: row.weekly_hours ?? "Varies",
+    type: row.cost_type === "Paid" ? "Paid" : "Free",
+    price: parsePrice(row.price_range),
+    scoreMin: min,
+    scoreMax: max,
+    section: mapSection(row.section_focus),
+    upvotes: 0,
+  };
+}
 
 type CardStatus = "idle" | "completed" | "skipped" | "saved";
 type MoveAnswer = "yes" | "little" | "not-yet";
@@ -289,10 +341,9 @@ const ResourceRow = ({ r }: { r: Resource }) => {
 };
 
 const Feed = () => {
-  const navigate = useNavigate();
   const quiz = useMemo(() => loadQuizState(), []);
 
-  // Pre-apply filters from quiz state
+  // Pre-apply filters from quiz state if available
   const KNOWN_SECTIONS: Section[] = [
     "Logical Reasoning",
     "Logic Games",
@@ -309,6 +360,9 @@ const Feed = () => {
   const initialType: TypeFilter =
     quiz?.budget === "free" ? "Free" : "All";
 
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [sectionF, setSectionF] = useState<SectionFilter>(initialSection);
   const [typeF, setTypeF] = useState<TypeFilter>(initialType);
   const [sourceF, setSourceF] = useState<SourceFilter>("All");
@@ -316,13 +370,24 @@ const Feed = () => {
   const [sort, setSort] = useState<Sort>("upvotes");
 
   useEffect(() => {
-    if (!quiz) {
-      navigate("/quiz", { replace: true });
-    }
-  }, [quiz, navigate]);
+    let cancelled = false;
+    supabase
+      .from("lsat_resources")
+      .select("id, resource_name, category, section_focus, cost_type, price_range, best_score_range, weekly_hours, description")
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error || !data) {
+          setFetchError(true);
+        } else {
+          setResources(data.map(mapRow));
+        }
+        setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   const filtered = useMemo(() => {
-    let list = SEED_RESOURCES.filter((r) => {
+    let list = resources.filter((r) => {
       if (sectionF !== "All" && r.section !== sectionF && r.section !== "All")
         return false;
       if (typeF !== "All" && r.type !== typeF) return false;
@@ -338,14 +403,20 @@ const Feed = () => {
     });
 
     if (sort === "upvotes") list = [...list].sort((a, b) => b.upvotes - a.upvotes);
-    if (sort === "newest") list = [...list].sort((a, b) => Number(b.id) - Number(a.id));
+    if (sort === "newest") list = [...list].sort((a, b) => a.title.localeCompare(b.title));
     if (sort === "beginner")
       list = [...list].sort((a, b) => a.scoreMin - b.scoreMin);
 
     return list;
-  }, [sectionF, typeF, sourceF, bandF, sort, quiz]);
+  }, [resources, sectionF, typeF, sourceF, bandF, sort, quiz]);
 
-  if (!quiz) return null;
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -372,11 +443,30 @@ const Feed = () => {
             Your Score-Matched Resources
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Curated for{" "}
-            <span className="font-semibold text-foreground">{quiz.currentScore}</span>{" "}
-            → <span className="font-semibold text-foreground">{quiz.targetScore}</span>{" "}
-            on <span className="font-semibold text-foreground">{quiz.section}</span>.
+            {quiz ? (
+              <>
+                Curated for{" "}
+                <span className="font-semibold text-foreground">{quiz.currentScore}</span>{" "}
+                →{" "}
+                <span className="font-semibold text-foreground">{quiz.targetScore}</span>{" "}
+                on{" "}
+                <span className="font-semibold text-foreground">{quiz.section}</span>.
+              </>
+            ) : (
+              <>
+                All LSAT resources —{" "}
+                <Link to="/quiz" className="font-semibold text-primary underline-offset-2 hover:underline">
+                  take the quiz
+                </Link>{" "}
+                to get personalized recommendations.
+              </>
+            )}
           </p>
+          {fetchError && (
+            <p className="mt-2 text-sm text-destructive">
+              Some resources couldn't be loaded. Showing what we have.
+            </p>
+          )}
         </section>
 
         <div className="grid gap-8 md:grid-cols-[220px_1fr]">
