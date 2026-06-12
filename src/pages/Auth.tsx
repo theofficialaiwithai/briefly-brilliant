@@ -5,88 +5,22 @@ import { SEO } from "@/components/SEO";
 
 type Mode = "signup" | "login";
 
-// Clerk appearance tuned to match the existing Briefly Brilliant design system:
-// teal #0D9488 primary, Inter body, 8px radii on inputs/buttons, no Clerk chrome
 const clerkAppearance = {
   variables: {
     colorPrimary: "#0D9488",
-    colorText: "#1A1A2E",
-    colorTextSecondary: "#6B7280",
     colorBackground: "#ffffff",
     colorInputBackground: "#ffffff",
-    colorInputText: "#1A1A2E",
+    colorText: "#1A1A2E",
+    colorTextSecondary: "#6B7280",
     borderRadius: "8px",
-    fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
-    fontSize: "14.4px",
+    fontFamily: "Inter, sans-serif",
   },
   elements: {
-    // Our own card wrapper handles the container — make Clerk's invisible
-    rootBox: { width: "100%" },
-    card: {
-      boxShadow: "none",
-      padding: 0,
-      margin: 0,
-      border: "none",
-      backgroundColor: "transparent",
-    },
-    // Hide Clerk's own title/subtitle — we render our own above the component
-    header: { display: "none" },
-    headerTitle: { display: "none" },
-    headerSubtitle: { display: "none" },
-    // Hide Clerk's footer "Don't have an account?" — our tab toggle handles this
-    footer: { display: "none" },
-    footerAction: { display: "none" },
-    // Inputs
-    formFieldInput: {
-      border: "1px solid #E5E7EB",
-      borderRadius: "8px",
-      padding: "10px 12px",
-      fontSize: "0.9rem",
-    },
-    formFieldLabel: {
-      fontSize: "0.85rem",
-      color: "#374151",
-      fontWeight: "500",
-    },
-    formFieldErrorText: {
-      fontSize: "0.8rem",
-      color: "#DC2626",
-    },
-    // Primary submit button — teal fill, no uppercase
-    formButtonPrimary: {
-      backgroundColor: "#0D9488",
-      borderRadius: "8px",
-      padding: "12px",
-      fontSize: "0.95rem",
-      fontWeight: "600",
-      textTransform: "none" as const,
-    },
-    // "or" divider
-    dividerLine: { backgroundColor: "#E5E7EB" },
-    dividerText: { color: "#9CA3AF", fontSize: "0.8rem" },
-    // Social buttons (Google, etc.)
-    socialButtonsBlockButton: {
-      border: "1px solid #E5E7EB",
-      borderRadius: "8px",
-      padding: "11px",
-      color: "#1A1A2E",
-      fontSize: "0.9rem",
-      fontWeight: "500",
-      backgroundColor: "#ffffff",
-    },
-    socialButtonsBlockButtonText: {
-      color: "#1A1A2E",
-      fontWeight: "500",
-    },
-    // Inline links Clerk renders mid-flow (e.g. "Back", "Try another method")
-    footerActionLink: { color: "#0D9488", fontWeight: "500" },
-    identityPreviewText: { color: "#1A1A2E" },
-    identityPreviewEditButtonIcon: { color: "#0D9488" },
-    // OTP / verification inputs
-    otpCodeFieldInput: {
-      border: "1px solid #E5E7EB",
-      borderRadius: "8px",
-    },
+    rootBox: "w-full",
+    card: "shadow-none border border-[#E5E7EB] rounded-2xl",
+    headerTitle: "font-semibold text-[#1A1A2E]",
+    formButtonPrimary: "bg-[#0D9488] hover:bg-[#0B7B71]",
+    footerActionLink: "text-[#0D9488]",
   },
 };
 
@@ -107,18 +41,16 @@ const Auth = () => {
     else if (m === "signup") setMode("signup");
   }, [params]);
 
-  // Redirect to /quiz as soon as Clerk reports the user is signed in.
-  // This fires both after a fresh sign-in/sign-up and if the user visits
-  // /auth while already authenticated.
+  // Redirect signed-in users away from /auth — returning users go to feed.
   useEffect(() => {
     if (isSignedIn) {
-      navigate("/quiz", { replace: true });
+      navigate("/feed", { replace: true });
     }
   }, [isSignedIn, navigate]);
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center px-4"
+      className="min-h-screen flex flex-col items-center justify-center px-4"
       style={{ backgroundColor: "#FAF7F2" }}
     >
       <SEO
@@ -134,6 +66,18 @@ const Auth = () => {
         }
         path="/auth"
       />
+
+      <p
+        style={{
+          fontFamily: "'Playfair Display', serif",
+          fontSize: "1.3rem",
+          color: "#1A1A2E",
+          textAlign: "center",
+          marginBottom: 24,
+        }}
+      >
+        Briefly Brilliant
+      </p>
 
       <div
         className="bg-white w-full"
@@ -194,7 +138,7 @@ const Auth = () => {
           {mode === "signup" ? (
             <SignUp appearance={clerkAppearance} afterSignUpUrl="/quiz" />
           ) : (
-            <SignIn appearance={clerkAppearance} afterSignInUrl="/quiz" />
+            <SignIn appearance={clerkAppearance} afterSignInUrl="/feed" />
           )}
         </div>
       </div>

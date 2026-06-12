@@ -10,7 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { useUser } from "@clerk/clerk-react";
-import { Logo } from "@/components/Logo";
+import { Nav } from "@/components/Nav";
 import { RedditPreview } from "@/components/RedditPreview";
 import { SEO } from "@/components/SEO";
 import {
@@ -612,17 +612,7 @@ const Feed = () => {
         description="Curated LSAT study resources tailored to your current score, target, and weakest section."
         path="/feed"
       />
-      <header className="border-b border-border">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-          <Logo />
-          <nav className="flex items-center gap-6 text-sm text-muted-foreground">
-            <Link to="/feed" className="hover:text-foreground">Feed</Link>
-            <Link to="/stories" className="hover:text-foreground">Stories</Link>
-            <Link to="/groups" className="hover:text-foreground">Study Groups</Link>
-            <Link to="/quiz" className="hover:text-foreground">Retake quiz</Link>
-          </nav>
-        </div>
-      </header>
+      <Nav />
 
       <main className="mx-auto max-w-6xl px-6 pb-24 pt-10">
         <section className="mb-8">

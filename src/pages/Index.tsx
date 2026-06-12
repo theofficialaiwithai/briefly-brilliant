@@ -9,8 +9,7 @@ import {
   ThumbsUp,
   ArrowUpRight,
 } from "lucide-react";
-import { SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
-import { Logo } from "@/components/Logo";
+import { Nav } from "@/components/Nav";
 import { SEO } from "@/components/SEO";
 
 const steps = [
@@ -86,45 +85,7 @@ const Index = () => {
           url: "/",
         }}
       />
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
-        <Logo />
-        <nav className="flex items-center gap-2">
-          <SignedOut>
-            <Link
-              to="/auth"
-              className="text-[0.9rem] font-medium px-4 py-2"
-              style={{ color: "#1A1A2E" }}
-            >
-              Log in
-            </Link>
-            <Link
-              to="/auth?mode=signup"
-              className="text-[0.9rem] font-medium text-white"
-              style={{
-                backgroundColor: "#0D9488",
-                borderRadius: 99,
-                padding: "8px 20px",
-              }}
-            >
-              Sign up
-            </Link>
-          </SignedOut>
-          <SignedIn>
-            <UserButton
-              afterSignOutUrl="/"
-              appearance={{
-                variables: { colorPrimary: "#0D9488" },
-                elements: {
-                  avatarBox: { width: 36, height: 36 },
-                  userButtonPopoverCard: { borderRadius: 12 },
-                  userButtonPopoverActionButton: { color: "#1A1A2E" },
-                  userButtonPopoverActionButtonText: { color: "#1A1A2E" },
-                },
-              }}
-            />
-          </SignedIn>
-        </nav>
-      </header>
+      <Nav />
 
       <main>
         <section className="mx-auto max-w-6xl px-6 pt-8 pb-20">

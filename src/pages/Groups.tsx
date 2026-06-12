@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 import { Globe, MapPin, Users, X } from "lucide-react";
-import { Logo } from "@/components/Logo";
+import { Nav } from "@/components/Nav";
 import { SEO } from "@/components/SEO";
 import { useSupabaseClient } from "@/lib/supabaseClient";
 import { useToast } from "@/hooks/use-toast";
@@ -707,18 +707,7 @@ const Groups = () => {
         path="/groups"
       />
 
-      {/* Nav */}
-      <header className="border-b" style={{ borderColor: "#E5E7EB", background: "white" }}>
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-          <Logo />
-          <nav className="flex items-center gap-6 text-sm" style={{ color: "#6B7280" }}>
-            <Link to="/feed" className="transition-colors hover:text-foreground">Feed</Link>
-            <Link to="/stories" className="transition-colors hover:text-foreground">Stories</Link>
-            <Link to="/groups" style={{ color: "#1A1A2E", fontWeight: 500 }}>Study Groups</Link>
-            <Link to="/quiz" className="transition-colors hover:text-foreground">Retake quiz</Link>
-          </nav>
-        </div>
-      </header>
+      <Nav />
 
       {/* Page header */}
       <div style={{ background: "white", borderBottom: "1px solid #E5E7EB" }}>

@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { Logo } from "@/components/Logo";
+import { Nav } from "@/components/Nav";
 import { SEO } from "@/components/SEO";
 import { Section } from "@/lib/study";
 import { cn } from "@/lib/utils";
@@ -51,19 +50,6 @@ const SEED: Story[] = [
   },
 ];
 
-const NavBar = () => (
-  <header className="border-b border-border">
-    <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-      <Logo />
-      <nav className="flex items-center gap-6 text-sm text-muted-foreground">
-        <Link to="/feed" className="hover:text-foreground">Feed</Link>
-        <Link to="/stories" className="hover:text-foreground">Stories</Link>
-        <Link to="/groups" className="hover:text-foreground">Study Groups</Link>
-        <Link to="/quiz" className="hover:text-foreground">Retake quiz</Link>
-      </nav>
-    </div>
-  </header>
-);
 
 const StoryCard = ({ s }: { s: Story }) => (
   <article className="rounded-xl border border-[#E5E7EB] bg-card p-5 shadow-card">
@@ -136,7 +122,7 @@ const Stories = () => {
           url: "/stories",
         }}
       />
-      <NavBar />
+      <Nav />
       <main className="mx-auto max-w-3xl px-6 pb-24 pt-10">
         <h1 className="text-[2rem] font-bold tracking-tight text-foreground">
           Score Journey Stories
