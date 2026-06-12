@@ -116,6 +116,12 @@ const Quiz = () => {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (isSignedIn && sessionStorage.getItem("quizAnswers")) {
+      navigate("/feed");
+    }
+  }, [isSignedIn, navigate]);
+
+  useEffect(() => {
     if (isSignedIn && user) {
       syncUser(supabase, user.id, user.primaryEmailAddress?.emailAddress);
     }
