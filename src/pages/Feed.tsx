@@ -10,6 +10,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { RedditPreview } from "@/components/RedditPreview";
 import { SEO } from "@/components/SEO";
 import {
   Resource,
@@ -36,7 +37,11 @@ type DbRow = {
   best_score_range: string | null;
   weekly_hours: string | null;
   description: string | null;
+  reddit_search_term: string | null;
 };
+
+// Resource augmented with the DB-only field we need locally
+type FeedResource = Resource & { redditSearchTerm?: string };
 
 function mapSection(sf: string | null): Section | "All" {
   switch (sf) {
@@ -58,7 +63,7 @@ function parsePrice(priceRange: string | null): number {
   return match ? parseInt(match[1].replace(",", "")) : 0;
 }
 
-function mapRow(row: DbRow): Resource {
+function mapRow(row: DbRow): FeedResource {
   const { min, max } = parseScoreRange(row.best_score_range);
   return {
     id: row.id,
@@ -72,6 +77,7 @@ function mapRow(row: DbRow): Resource {
     scoreMax: max,
     section: mapSection(row.section_focus),
     upvotes: 0,
+    redditSearchTerm: row.reddit_search_term ?? undefined,
   };
 }
 
@@ -197,7 +203,7 @@ const FilterGroup = ({
   </div>
 );
 
-const ResourceRow = ({ r }: { r: Resource }) => {
+const ResourceRow = ({ r, redditQuery }: { r: Resource; redditQuery?: string }) => {
   const [upvoted, setUpvoted] = useState(false);
   const [status, setStatus] = useState<CardStatus>("idle");
   const [move, setMove] = useState<MoveAnswer | null>(null);
@@ -363,6 +369,8 @@ const ResourceRow = ({ r }: { r: Resource }) => {
           </p>
         </div>
       )}
+
+      {redditQuery && <RedditPreview query={redditQuery} />}
     </article>
   );
 };
@@ -386,7 +394,7 @@ const Feed = () => {
   const initialType: TypeFilter =
     quiz?.budget === "free" ? "Free" : "All";
 
-  const [resources, setResources] = useState<Resource[]>([]);
+  const [resources, setResources] = useState<FeedResource[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
   const [sectionF, setSectionF] = useState<SectionFilter>(initialSection);
@@ -399,7 +407,7 @@ const Feed = () => {
     let cancelled = false;
     supabase
       .from("lsat_resources")
-      .select("id, resource_name, category, section_focus, cost_type, price_range, best_score_range, weekly_hours, description")
+      .select("id, resource_name, category, section_focus, cost_type, price_range, best_score_range, weekly_hours, description, reddit_search_term")
       .then(({ data, error }) => {
         if (cancelled) return;
         if (error || !data) {
@@ -445,6 +453,24 @@ const Feed = () => {
 
     return list;
   }, [resources, sectionF, typeF, sourceF, bandF, sort, quiz]);
+
+  // Top-5 best-matched resources (score >= 3) get a Reddit preview
+  const redditQueryMap = useMemo(() => {
+    if (sort !== "best" || !quiz) return new Map<string, string>();
+    const map = new Map<string, string>();
+    let count = 0;
+    for (const r of filtered) {
+      if (count >= 5) break;
+      if (bestMatchScore(r, quiz) >= 3) {
+        map.set(
+          r.id,
+          (r as FeedResource).redditSearchTerm ?? `${r.title} LSAT`
+        );
+        count++;
+      }
+    }
+    return map;
+  }, [filtered, sort, quiz]);
 
   if (loading) {
     return (
@@ -581,7 +607,13 @@ const Feed = () => {
                   </p>
                 </div>
               ) : (
-                filtered.map((r) => <ResourceRow key={r.id} r={r} />)
+                filtered.map((r) => (
+                  <ResourceRow
+                    key={r.id}
+                    r={r}
+                    redditQuery={redditQueryMap.get(r.id)}
+                  />
+                ))
               )}
             </div>
           </div>
