@@ -5,6 +5,7 @@ import {
   CheckCircle,
   ChevronUp,
   Clock,
+  ExternalLink,
   Loader2,
   Sparkles,
   X,
@@ -39,10 +40,11 @@ type DbRow = {
   weekly_hours: string | null;
   description: string | null;
   reddit_search_term: string | null;
+  url: string | null;
 };
 
-// Resource augmented with the DB-only field we need locally
-type FeedResource = Resource & { redditSearchTerm?: string };
+// Resource augmented with DB-only fields we need locally
+type FeedResource = Resource & { redditSearchTerm?: string; url?: string };
 
 type FeedbackAction = "completed" | "saved" | "skipped";
 type ActionResult = "ok" | "error" | "unauthenticated";
@@ -82,6 +84,7 @@ function mapRow(row: DbRow): FeedResource {
     section: mapSection(row.section_focus),
     upvotes: 0,
     redditSearchTerm: row.reddit_search_term ?? undefined,
+    url: row.url ?? undefined,
   };
 }
 
@@ -242,7 +245,7 @@ const ResourceRow = ({
   currentAction,
   onAction,
 }: {
-  r: Resource;
+  r: FeedResource;
   redditQuery?: string;
   currentAction: FeedbackAction | null;
   onAction: (resourceId: string, action: FeedbackAction) => Promise<ActionResult>;
@@ -270,7 +273,18 @@ const ResourceRow = ({
   const bandText = `${r.scoreMin}–${r.scoreMax}`;
 
   return (
-    <article className="rounded-2xl border border-border bg-card p-5 shadow-card transition-all hover:shadow-card-hover">
+    <article className="relative rounded-2xl border border-border bg-card p-5 shadow-card transition-all hover:shadow-card-hover">
+      {r.url && (
+        <a
+          href={r.url}
+          target="_blank"
+          rel="noreferrer"
+          className="absolute right-4 top-4 transition-colors text-[#6B7280] hover:text-[#0D9488]"
+          aria-label="Visit resource"
+        >
+          <ExternalLink className="h-4 w-4" />
+        </a>
+      )}
       <div className="flex gap-4">
         {/* Upvote */}
         <button
@@ -291,9 +305,11 @@ const ResourceRow = ({
 
         {/* Middle */}
         <div className="min-w-0 flex-1">
-          <h2 className="text-base font-semibold leading-snug text-foreground">
-            {r.title}
-          </h2>
+          <Link to={`/resources/${r.id}`} className="hover:underline">
+            <h2 className="text-base font-semibold leading-snug text-foreground">
+              {r.title}
+            </h2>
+          </Link>
           <p className="mt-1 text-sm italic text-primary">{r.reason}</p>
           <div className="mt-3 flex flex-wrap items-center gap-1.5">
             <span
@@ -467,7 +483,7 @@ const Feed = () => {
     let cancelled = false;
     supabase
       .from("lsat_resources")
-      .select("id, resource_name, category, section_focus, cost_type, price_range, best_score_range, weekly_hours, description, reddit_search_term")
+      .select("id, resource_name, category, section_focus, cost_type, price_range, best_score_range, weekly_hours, description, reddit_search_term, url")
       .then(({ data, error }) => {
         if (cancelled) return;
         if (error || !data) {
@@ -589,7 +605,7 @@ const Feed = () => {
       if (bestMatchScore(r, quiz) >= 3) {
         map.set(
           r.id,
-          (r as FeedResource).redditSearchTerm ?? `${r.title} LSAT`
+          r.redditSearchTerm ?? `${r.title} LSAT`
         );
         count++;
       }

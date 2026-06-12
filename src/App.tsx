@@ -11,6 +11,9 @@ import QuizResults from "./pages/QuizResults.tsx";
 import Stories from "./pages/Stories.tsx";
 import Groups from "./pages/Groups.tsx";
 import Auth from "./pages/Auth.tsx";
+import ResourceProfile from "./pages/ResourceProfile.tsx";
+import Dashboard from "./pages/Dashboard.tsx";
+import Library from "./pages/Library.tsx";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +31,9 @@ const App = () => (
           <Route path="/stories" element={<Stories />} />
           <Route path="/groups" element={<Groups />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/resources/:id" element={<ResourceProfile />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/library" element={<Library />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

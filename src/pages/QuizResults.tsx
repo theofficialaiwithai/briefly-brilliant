@@ -16,6 +16,7 @@ type Recommendation = {
   price_range: string;
   section_focus: string;
   why_this_fits_you: string;
+  id?: string;
 };
 
 type SectionFilter = "All" | "LR" | "RC" | "LG";
@@ -84,8 +85,20 @@ const ResourceCard = ({ r }: { r: Recommendation }) => (
       borderRadius: 16,
       padding: "28px 32px",
       boxShadow: "0 2px 20px rgba(0,0,0,0.06)",
+      position: "relative",
     }}
   >
+    {r.url && (
+      <a
+        href={r.url}
+        target="_blank"
+        rel="noreferrer"
+        className="absolute right-5 top-5 transition-colors text-[#6B7280] hover:text-[#0D9488]"
+        aria-label="Visit resource"
+      >
+        <ExternalLink className="h-4 w-4" />
+      </a>
+    )}
     {/* Title row */}
     <div className="flex items-start justify-between gap-4">
       <div className="flex items-center gap-3 min-w-0">
