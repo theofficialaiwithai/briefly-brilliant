@@ -563,6 +563,7 @@ const Feed = () => {
 
   const filtered = useMemo(() => {
     let list = resources.filter((r) => {
+      if (feedbackMap.get(r.id) === "skipped") return false;
       if (sectionF !== "All" && r.section !== sectionF && r.section !== "All")
         return false;
       if (typeF !== "All" && r.type !== typeF) return false;
@@ -593,7 +594,7 @@ const Feed = () => {
     }
 
     return list;
-  }, [resources, sectionF, typeF, sourceF, bandF, sort, quiz]);
+  }, [resources, feedbackMap, sectionF, typeF, sourceF, bandF, sort, quiz]);
 
   // Top-5 best-matched resources (score >= 3) get a Reddit preview
   const redditQueryMap = useMemo(() => {
