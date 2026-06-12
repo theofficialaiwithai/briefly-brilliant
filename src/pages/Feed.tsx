@@ -123,7 +123,7 @@ function bestMatchScore(r: Resource, quiz: ReturnType<typeof loadQuizState>): nu
   const rs = r.section;
   const qs = quiz.section;
   if (rs === "All") score += 1;
-  else if (qs === rs) score += 2;
+  else if (qs.toLowerCase() === rs.toLowerCase()) score += 2;
 
   if (typeof quiz.currentScore === "number") {
     const s = quiz.currentScore;
@@ -647,7 +647,11 @@ const Feed = () => {
     });
 
     if (applied.sort === "best") {
-      list = [...list].sort((a, b) => bestMatchScore(b, quiz) - bestMatchScore(a, quiz));
+      if (!quiz) {
+        list = [...list].sort((a, b) => b.upvotes - a.upvotes);
+      } else {
+        list = [...list].sort((a, b) => bestMatchScore(b, quiz) - bestMatchScore(a, quiz));
+      }
     } else if (applied.sort === "upvotes") {
       list = [...list].sort((a, b) => b.upvotes - a.upvotes);
     } else if (applied.sort === "beginner") {
