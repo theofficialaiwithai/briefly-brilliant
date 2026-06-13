@@ -555,6 +555,87 @@ const ResourceProfile = () => {
       ? resource.price_range || "Paid"
       : resource.cost_type || "Free";
   const isLastVideo = currentVideoIndex >= playlistVideos.length - 1;
+  const isYouTube = !!(ytVideoId || isPlaylist || isChannel);
+  const hasSeries = playlistVideos.length > 0;
+  const showSidebar = hasSeries && !playlistLoading;
+
+  // ── Shared JSX ────────────────────────────────────────────────────────────
+  const aboutCard = (
+    <div style={{ background: "white", border: "1px solid #E5E7EB", borderRadius: 12, padding: 24, marginBottom: 16 }}>
+      <h2 style={{ fontWeight: 600, fontSize: "1rem", color: "#1A1A2E", margin: "0 0 12px" }}>About</h2>
+      <p style={{ fontSize: "0.875rem", lineHeight: 1.65, color: "#4B5563", margin: 0 }}>
+        {resource.description || "No description available."}
+      </p>
+      {whyText && (
+        <div style={{ marginTop: 16, borderRadius: 8, padding: 16, background: "#F0FDFA" }}>
+          <p style={{ fontSize: "0.75rem", fontWeight: 700, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 6px" }}>
+            Why this fits you
+          </p>
+          <p style={{ fontSize: "0.875rem", fontStyle: "italic", lineHeight: 1.6, color: "#4B5563", margin: 0 }}>
+            {whyText}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+
+  const redditCard = (
+    <div style={{ background: "white", border: "1px solid #E5E7EB", borderRadius: 12, padding: 24 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+        <span style={{ color: "#FF4500", fontSize: 18 }}>●</span>
+        <span style={{ fontWeight: 600, color: "#1A1A2E", fontSize: "0.95rem" }}>What Reddit says</span>
+      </div>
+      {redditLoading && (
+        <div>{[1, 2, 3].map(i => <div key={i} style={{ height: 60, background: "#F3F4F6", borderRadius: 8, marginBottom: 10 }} />)}</div>
+      )}
+      {!redditLoading && redditPosts.length === 0 && (
+        <p style={{ color: "#6B7280", fontSize: "0.875rem", fontStyle: "italic", margin: 0 }}>
+          No Reddit discussions found. Try{" "}
+          <a href={`https://www.reddit.com/r/LSAT/search/?q=${encodeURIComponent(resource.reddit_search_term || resource.resource_name || "")}&sort=top`} target="_blank" rel="noreferrer" style={{ color: "#0D9488" }}>
+            searching r/LSAT →
+          </a>
+        </p>
+      )}
+      {!redditLoading && redditPosts.length > 0 && (
+        <div>
+          {redditPosts.map((post, i) => (
+            <a key={i} href={`https://reddit.com${post.permalink}`} target="_blank" rel="noreferrer"
+              style={{ display: "block", padding: "10px 12px", borderRadius: 8, marginBottom: 8, textDecoration: "none", background: "#FAFAFA", border: "1px solid #F3F4F6" }}
+              onMouseEnter={e => (e.currentTarget.style.background = "#F0FDFA")}
+              onMouseLeave={e => (e.currentTarget.style.background = "#FAFAFA")}
+            >
+              <p style={{ margin: "0 0 4px", fontSize: "0.875rem", fontWeight: 500, color: "#1A1A2E", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{post.title}</p>
+              {post.selftext && (
+                <p style={{ margin: "0 0 6px", fontSize: "0.8rem", color: "#6B7280", fontStyle: "italic" }}>
+                  {post.selftext.slice(0, 120)}{post.selftext.length > 120 ? "..." : ""}
+                </p>
+              )}
+              <div style={{ display: "flex", gap: 12, fontSize: "0.75rem" }}>
+                <span style={{ color: "#0D9488" }}>▲ {post.score}</span>
+                <span style={{ color: "#6B7280" }}>{post.num_comments} comments</span>
+                <span style={{ color: "#9CA3AF" }}>r/{post.subreddit}</span>
+              </div>
+            </a>
+          ))}
+          <a href={`https://www.reddit.com/r/LSAT/search/?q=${encodeURIComponent(resource.reddit_search_term || resource.resource_name || "")}&sort=top`} target="_blank" rel="noreferrer"
+            style={{ display: "block", marginTop: 8, fontSize: "0.8rem", color: "#0D9488", fontWeight: 500 }}>
+            See all Reddit discussions →
+          </a>
+        </div>
+      )}
+    </div>
+  );
+
+  const addToCurriculumBtn = (fullWidth = false) => (
+    <button onClick={handleAddToCurriculum} disabled={inCurriculum}
+      style={inCurriculum
+        ? { background: "#F0FDF4", border: "1.5px solid #16A34A", color: "#16A34A", borderRadius: 8, padding: "10px", fontSize: "0.875rem", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 6, ...(fullWidth ? { width: "100%", justifyContent: "center" } : {}), cursor: "default" }
+        : { background: "white", border: "1.5px solid #0D9488", color: "#0D9488", borderRadius: 8, padding: "10px", fontSize: "0.875rem", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 6, ...(fullWidth ? { width: "100%", justifyContent: "center" } : {}), cursor: "pointer" }
+      }>
+      <BookPlus className="h-4 w-4" />
+      {inCurriculum ? "✓ Added to Curriculum" : "Add to Study Curriculum"}
+    </button>
+  );
 
   return (
     <div style={{ minHeight: "100vh", background: "#FAF7F2" }}>
@@ -562,23 +643,13 @@ const ResourceProfile = () => {
 
       {/* Sticky subheader */}
       <div className="sticky top-0 z-10 border-b bg-white" style={{ borderColor: "#E5E7EB" }}>
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-1.5 text-sm transition-colors hover:text-[#1A1A2E]"
-            style={{ color: "#6B7280" }}
-          >
+        <div style={{ maxWidth: isYouTube ? 1200 : 896, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 52 }}>
+          <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-sm transition-colors hover:text-[#1A1A2E]" style={{ color: "#6B7280" }}>
             <ArrowLeft className="h-4 w-4" />
             Back
           </button>
           {resource.url && (
-            <a
-              href={resource.url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
-              style={{ background: "#0D9488", borderRadius: 8, padding: "8px 16px" }}
-            >
+            <a href={resource.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90" style={{ background: "#0D9488", borderRadius: 8, padding: "8px 16px" }}>
               Visit Resource
               <ExternalLink className="h-3.5 w-3.5" />
             </a>
@@ -586,518 +657,321 @@ const ResourceProfile = () => {
         </div>
       </div>
 
-      <main className="mx-auto max-w-4xl px-6 pb-24 pt-8">
-        {/* Hero */}
-        <div className="mb-8">
-          <div className="mb-3 flex flex-wrap items-center gap-2">
-            <span className="rounded-full px-3 py-1 text-xs font-bold text-white" style={{ background: "#0D9488" }}>
-              Resource
-            </span>
-            {resource.category && (
-              <span className="rounded-full px-3 py-1 text-xs font-medium" style={{ background: "#F3F4F6", color: "#6B7280" }}>
-                {resource.category}
-              </span>
-            )}
-          </div>
-          <h1
-            className="font-bold leading-tight"
-            style={{ fontFamily: "'Playfair Display', serif", fontSize: "2rem", color: "#1A1A2E" }}
-          >
-            {resource.resource_name ?? "Untitled"}
-          </h1>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            {tags.map(tag => (
-              <span key={tag} className="rounded-full px-2.5 py-0.5 text-xs font-medium" style={{ background: "#F3F4F6", color: "#4B5563" }}>
-                {tag}
-              </span>
-            ))}
-            <span className="rounded-full px-2.5 py-0.5 text-xs font-medium" style={{ background: "#E1F5EE", color: "#0D9488" }}>
-              Score: {scoreRange}
-            </span>
-          </div>
-        </div>
+      {isYouTube ? (
+        /* ── YOUTUBE LAYOUT ───────────────────────────────────────────────── */
+        <main style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 24px 96px" }}>
+          <style>{`
+            @media (max-width: 767px) {
+              .yt-top { flex-direction: column !important; }
+              .yt-player-box { border-radius: 12px !important; }
+              .yt-sidebar-box { width: 100% !important; border-left: 1px solid #E5E7EB !important; border-radius: 12px !important; align-self: auto !important; max-height: 280px !important; }
+              .yt-bottom-cols { flex-direction: column !important; }
+              .yt-right-col { width: 100% !important; }
+            }
+          `}</style>
 
-        {/* ── YouTube / Playlist player ───────────────────────────────────── */}
-        {resource.url && (
-          <>
-            {/* ── SERIES PLAYER ── */}
-            {(isPlaylist || isChannel) && (
-              <>
-                {playlistLoading && (
-                  <div style={{ maxWidth: 960, margin: "0 auto 20px" }}>
-                    <div
-                      className="animate-pulse"
-                      style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: 12, backgroundColor: "#E5E7EB" }}
-                    />
-                  </div>
-                )}
+          {/* TOP: player + sidebar */}
+          <div className="yt-top" style={{ display: "flex", alignItems: "flex-start", marginBottom: 16 }}>
 
-                {!playlistLoading && playlistVideos.length > 0 && currentVideo && (
-                  <div style={{ maxWidth: 960, margin: "0 auto 32px" }}>
-                    {/* Progress bar row */}
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                      <span style={{ fontSize: "0.85rem", color: "#6B7280" }}>
-                        {watchedCount} of {playlistVideos.length} videos watched
-                      </span>
-                      <div style={{ width: 140, height: 6, borderRadius: 99, backgroundColor: "#E5E7EB", overflow: "hidden" }}>
-                        <div
-                          style={{
-                            height: "100%",
-                            borderRadius: 99,
-                            backgroundColor: "#0D9488",
-                            width: `${playlistVideos.length > 0 ? (watchedCount / playlistVideos.length) * 100 : 0}%`,
-                            transition: "width 0.4s",
-                          }}
-                        />
-                      </div>
+            {/* Player column */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+
+              {/* Loading skeleton */}
+              {playlistLoading && (
+                <div className="animate-pulse yt-player-box" style={{ aspectRatio: "16/9", borderRadius: 12, backgroundColor: "#E5E7EB" }} />
+              )}
+
+              {/* Series player (YT IFrame API) */}
+              {!playlistLoading && hasSeries && currentVideo && (
+                <div className="yt-player-box" style={{ position: "relative", aspectRatio: "16/9", borderRadius: showSidebar ? "12px 0 0 12px" : "12px", overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.08)" }}>
+                  <div id={playerIdRef.current} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} />
+                  {countdown !== null && (
+                    <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.72)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, zIndex: 10 }}>
+                      <p style={{ color: "white", fontSize: "1rem", fontWeight: 500, margin: 0 }}>Next video in {countdown}…</p>
+                      <button onClick={cancelCountdown} style={{ background: "white", border: "none", borderRadius: 6, padding: "7px 20px", fontSize: "0.875rem", fontWeight: 500, cursor: "pointer", color: "#1A1A2E" }}>Cancel</button>
                     </div>
+                  )}
+                </div>
+              )}
 
-                    {/* Two-column layout */}
-                    <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+              {/* Playlist fallback (API failed) */}
+              {!playlistLoading && !hasSeries && isPlaylist && ytPlaylistId && (
+                <div className="yt-player-box" style={{ position: "relative", aspectRatio: "16/9", borderRadius: 12, overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.08)" }}>
+                  <iframe src={`https://www.youtube.com/embed/videoseries?list=${ytPlaylistId}`} title={resource.resource_name ?? ""} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }} />
+                </div>
+              )}
 
-                      {/* LEFT: main player */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        {/* 16:9 iframe */}
-                        <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: 12, overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.08)" }}>
-                          <div
-                            id={playerIdRef.current}
-                            style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
-                          />
-                          {/* Auto-advance countdown overlay */}
-                          {countdown !== null && (
-                            <div
-                              style={{
-                                position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-                                backgroundColor: "rgba(0,0,0,0.72)",
-                                display: "flex", flexDirection: "column",
-                                alignItems: "center", justifyContent: "center",
-                                gap: 14, zIndex: 10, borderRadius: 12,
-                              }}
-                            >
-                              <p style={{ color: "white", fontSize: "1rem", fontWeight: 500, margin: 0 }}>
-                                Next video in {countdown}…
-                              </p>
-                              <button
-                                onClick={cancelCountdown}
-                                style={{
-                                  background: "white", border: "none", borderRadius: 6,
-                                  padding: "7px 20px", fontSize: "0.875rem", fontWeight: 500,
-                                  cursor: "pointer", color: "#1A1A2E",
-                                }}
-                              >
-                                Cancel
-                              </button>
+              {/* Channel fallback (API failed) */}
+              {!playlistLoading && !hasSeries && isChannel && (
+                <div className="yt-player-box" style={{ aspectRatio: "16/9", borderRadius: 12, background: "white", border: "1px solid #E5E7EB", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
+                  <p style={{ fontSize: "0.9rem", color: "#4B5563", margin: 0 }}>Visit this YouTube channel to watch the video series.</p>
+                  <a href={resource.url!} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#0D9488", color: "white", borderRadius: 8, padding: "10px 20px", fontSize: "0.875rem", fontWeight: 500, textDecoration: "none" }}>
+                    Visit Channel <ExternalLink size={14} />
+                  </a>
+                </div>
+              )}
+
+              {/* Single video embed */}
+              {!isPlaylist && !isChannel && ytVideoId && (
+                <div className="yt-player-box" style={{ position: "relative", aspectRatio: "16/9", borderRadius: 12, overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.08)" }}>
+                  <iframe src={`https://www.youtube.com/embed/${ytVideoId}`} title={resource.resource_name ?? ""} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }} />
+                </div>
+              )}
+            </div>
+
+            {/* Playlist sidebar (series only, after load) */}
+            {showSidebar && (
+              <div className="yt-sidebar-box" style={{ width: 340, flexShrink: 0, alignSelf: "stretch", background: "white", border: "1px solid #E5E7EB", borderLeft: "none", borderRadius: "0 12px 12px 0", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                <div style={{ padding: "14px 16px", borderBottom: "1px solid #E5E7EB", flexShrink: 0 }}>
+                  <span style={{ fontWeight: 600, fontSize: "0.9rem", color: "#1A1A2E" }}>Up next</span>
+                </div>
+                <div style={{ flex: 1, overflowY: "auto" }}>
+                  {playlistVideos.map((video, idx) => {
+                    const isActive = idx === currentVideoIndex;
+                    const isWatched = watchedVideoIds.has(video.videoId);
+                    return (
+                      <div key={video.videoId} id={`playlist-item-${idx}`} onClick={() => setCurrentVideoIndex(idx)}
+                        style={{ padding: "10px 12px", cursor: "pointer", borderBottom: "1px solid #F3F4F6", borderLeft: isActive ? "3px solid #0D9488" : "3px solid transparent", backgroundColor: isActive ? "#F0FDFA" : "transparent", display: "flex", gap: 8, alignItems: "flex-start" }}>
+                        <div style={{ position: "relative", flexShrink: 0 }}>
+                          {video.thumbnail
+                            ? <img src={video.thumbnail} alt="" style={{ width: 120, height: 68, borderRadius: 6, objectFit: "cover", display: "block" }} />
+                            : <div style={{ width: 120, height: 68, borderRadius: 6, backgroundColor: "#E5E7EB" }} />
+                          }
+                          {isWatched && (
+                            <div style={{ position: "absolute", bottom: 4, right: 4, width: 18, height: 18, borderRadius: "50%", backgroundColor: "#0D9488", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid white" }}>
+                              <span style={{ color: "white", fontSize: 10, fontWeight: 700, lineHeight: 1 }}>✓</span>
                             </div>
                           )}
                         </div>
-
-                        {/* Current video title */}
-                        <p style={{ marginTop: 12, fontWeight: 600, fontSize: "1rem", color: "#1A1A2E", fontFamily: "Inter, sans-serif", lineHeight: 1.4 }}>
-                          {currentVideo.title}
+                        <p style={{ margin: 0, fontSize: "0.8rem", color: "#1A1A2E", lineHeight: 1.35, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", textOverflow: "ellipsis" } as React.CSSProperties}>
+                          {video.title}
                         </p>
-
-                        {/* Button row */}
-                        <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-                          {watchedVideoIds.has(currentVideo.videoId) ? (
-                            <button
-                              disabled
-                              style={{
-                                background: "#F0FDF4", border: "1px solid #16A34A", color: "#16A34A",
-                                borderRadius: 8, padding: "8px 14px", fontSize: "0.875rem", fontWeight: 500,
-                                cursor: "default", display: "inline-flex", alignItems: "center", gap: 6,
-                              }}
-                            >
-                              ✓ Watched
-                            </button>
-                          ) : (
-                            <button
-                              onClick={handleMarkWatched}
-                              style={{
-                                background: "white", border: "1px solid #E5E7EB", color: "#1A1A2E",
-                                borderRadius: 8, padding: "8px 14px", fontSize: "0.875rem", fontWeight: 500,
-                                cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6,
-                              }}
-                            >
-                              <Check size={14} />
-                              Mark as Watched
-                            </button>
-                          )}
-
-                          <button
-                            onClick={() => setCurrentVideoIndex(i => i + 1)}
-                            disabled={isLastVideo}
-                            style={{
-                              background: "white",
-                              border: `1.5px solid ${isLastVideo ? "#D1D5DB" : "#0D9488"}`,
-                              color: isLastVideo ? "#9CA3AF" : "#0D9488",
-                              borderRadius: 8, padding: "8px 16px", fontSize: "0.875rem", fontWeight: 500,
-                              cursor: isLastVideo ? "not-allowed" : "pointer",
-                              display: "inline-flex", alignItems: "center", gap: 4,
-                            }}
-                          >
-                            Next →
-                          </button>
-                        </div>
                       </div>
-
-                      {/* RIGHT: playlist sidebar */}
-                      <div style={{ width: 280, flexShrink: 0 }}>
-                        <div style={{ background: "white", border: "1px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
-                          <div style={{ padding: "14px 16px", borderBottom: "1px solid #E5E7EB" }}>
-                            <span style={{ fontWeight: 600, fontSize: "0.9rem", color: "#1A1A2E" }}>Up next</span>
-                          </div>
-                          <div style={{ maxHeight: 380, overflowY: "auto" }}>
-                            {playlistVideos.map((video, idx) => {
-                              const isActive = idx === currentVideoIndex;
-                              const isWatched = watchedVideoIds.has(video.videoId);
-                              return (
-                                <div
-                                  key={video.videoId}
-                                  id={`playlist-item-${idx}`}
-                                  onClick={() => setCurrentVideoIndex(idx)}
-                                  style={{
-                                    padding: "10px 12px",
-                                    cursor: "pointer",
-                                    borderBottom: "1px solid #F3F4F6",
-                                    borderLeft: isActive ? "3px solid #0D9488" : "3px solid transparent",
-                                    backgroundColor: isActive ? "#F0FDFA" : "transparent",
-                                    display: "flex",
-                                    gap: 10,
-                                    alignItems: "flex-start",
-                                  }}
-                                >
-                                  {/* Thumbnail */}
-                                  <div style={{ position: "relative", flexShrink: 0 }}>
-                                    {video.thumbnail ? (
-                                      <img
-                                        src={video.thumbnail}
-                                        alt=""
-                                        style={{ width: 40, height: 28, borderRadius: 4, objectFit: "cover", display: "block" }}
-                                      />
-                                    ) : (
-                                      <div style={{ width: 40, height: 28, borderRadius: 4, backgroundColor: "#E5E7EB" }} />
-                                    )}
-                                    {isWatched && (
-                                      <div
-                                        style={{
-                                          position: "absolute", bottom: -3, right: -3,
-                                          width: 14, height: 14, borderRadius: "50%",
-                                          backgroundColor: "#0D9488",
-                                          display: "flex", alignItems: "center", justifyContent: "center",
-                                          border: "1.5px solid white",
-                                        }}
-                                      >
-                                        <span style={{ color: "white", fontSize: 8, fontWeight: 700, lineHeight: 1 }}>✓</span>
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  {/* Title */}
-                                  <p
-                                    style={{
-                                      margin: 0,
-                                      fontSize: "0.8rem",
-                                      color: "#1A1A2E",
-                                      lineHeight: 1.35,
-                                      overflow: "hidden",
-                                      display: "-webkit-box",
-                                      WebkitLineClamp: 2,
-                                      WebkitBoxOrient: "vertical",
-                                      textOverflow: "ellipsis",
-                                    } as React.CSSProperties}
-                                  >
-                                    {video.title}
-                                  </p>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Series action buttons */}
-                    <div style={{ display: "flex", gap: 12, marginTop: 16, flexWrap: "wrap" }}>
-                      <button
-                        onClick={handleAddSeriesToCurriculum}
-                        style={{
-                          background: "white", border: "1.5px solid #0D9488", color: "#0D9488",
-                          borderRadius: 8, padding: "10px 18px", fontSize: "0.875rem", fontWeight: 500,
-                          cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6,
-                        }}
-                      >
-                        <BookPlus size={14} />
-                        Add Series to Study Curriculum
-                      </button>
-                      <button
-                        onClick={() => toast("Learning Hub coming soon — finish setting up your hub first!")}
-                        style={{
-                          background: "white", border: "1.5px solid #0D9488", color: "#0D9488",
-                          borderRadius: 8, padding: "10px 18px", fontSize: "0.875rem", fontWeight: 500,
-                          cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6,
-                        }}
-                      >
-                        <BookPlus size={14} />
-                        Add Series to Learning Hub
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Fallback: playlist embed when API fails */}
-                {!playlistLoading && playlistVideos.length === 0 && isPlaylist && ytPlaylistId && (
-                  <div style={{ maxWidth: 960, margin: "0 auto 32px" }}>
-                    <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: 12, overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.08)" }}>
-                      <iframe
-                        src={`https://www.youtube.com/embed/videoseries?list=${ytPlaylistId}`}
-                        title={resource.resource_name ?? ""}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Fallback: visit channel card when channel API fails */}
-                {!playlistLoading && playlistVideos.length === 0 && isChannel && (
-                  <div style={{ maxWidth: 960, margin: "0 auto 32px" }}>
-                    <div style={{ background: "white", border: "1px solid #E5E7EB", borderRadius: 12, padding: "32px 24px", textAlign: "center", boxShadow: "0 2px 20px rgba(0,0,0,0.06)" }}>
-                      <p style={{ fontSize: "0.9rem", color: "#4B5563", marginBottom: 16 }}>
-                        Visit this YouTube channel to watch the video series.
-                      </p>
-                      <a
-                        href={resource.url!}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#0D9488", color: "white", borderRadius: 8, padding: "10px 20px", fontSize: "0.875rem", fontWeight: 500, textDecoration: "none" }}
-                      >
-                        Visit Channel
-                        <ExternalLink size={14} />
-                      </a>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* ── SINGLE VIDEO EMBED (unchanged) ── */}
-            {!isPlaylist && !isChannel && ytVideoId && (
-              <div style={{ maxWidth: 960, margin: "0 auto 32px" }}>
-                <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: 12, overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.08)" }}>
-                  <iframe
-                    src={`https://www.youtube.com/embed/${ytVideoId}`}
-                    title={resource.resource_name ?? ""}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
-                  />
-                </div>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Two-column grid */}
-        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-          {/* LEFT */}
-          <div className="space-y-5">
-            {/* About */}
-            <div className="rounded-2xl border bg-white p-6" style={{ borderColor: "#E5E7EB", boxShadow: "0 2px 20px rgba(0,0,0,0.06)" }}>
-              <h2 className="mb-3 text-base font-semibold" style={{ color: "#1A1A2E" }}>About</h2>
-              <p className="text-sm leading-relaxed" style={{ color: "#4B5563" }}>
-                {resource.description || "No description available."}
-              </p>
-              {whyText && (
-                <div className="mt-4 rounded-lg p-4" style={{ background: "#F0FDFA" }}>
-                  <p className="mb-1 text-xs font-semibold uppercase tracking-wider" style={{ color: "#9CA3AF" }}>
-                    Why this fits you
-                  </p>
-                  <p className="text-sm italic leading-relaxed" style={{ color: "#4B5563" }}>
-                    {whyText}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Reddit */}
-            <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 12, padding: 24, marginBottom: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                <span style={{ color: "#FF4500", fontSize: 18 }}>●</span>
-                <span style={{ fontWeight: 600, color: "#1A1A2E", fontSize: "0.95rem" }}>What Reddit says</span>
-              </div>
-
-              {redditLoading && (
-                <div>
-                  {[1, 2, 3].map(i => (
-                    <div key={i} style={{ height: 60, background: "#F3F4F6", borderRadius: 8, marginBottom: 10 }} />
-                  ))}
-                </div>
-              )}
-
-              {!redditLoading && redditPosts.length === 0 && (
-                <p style={{ color: "#6B7280", fontSize: "0.875rem", fontStyle: "italic" }}>
-                  No Reddit discussions found for this resource. Try searching{" "}
-                  <a
-                    href={`https://www.reddit.com/r/LSAT/search/?q=${encodeURIComponent(resource.reddit_search_term || resource.resource_name || "")}&sort=top`}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ color: "#0D9488" }}
-                  >
-                    r/LSAT directly →
-                  </a>
-                </p>
-              )}
-
-              {!redditLoading && redditPosts.length > 0 && (
-                <div>
-                  {redditPosts.map((post, i) => (
-                    <a
-                      key={i}
-                      href={`https://reddit.com${post.permalink}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{ display: "block", padding: "10px 12px", borderRadius: 8, marginBottom: 8, textDecoration: "none", background: "#FAFAFA", border: "1px solid #F3F4F6" }}
-                      onMouseEnter={e => (e.currentTarget.style.background = "#F0FDFA")}
-                      onMouseLeave={e => (e.currentTarget.style.background = "#FAFAFA")}
-                    >
-                      <p style={{ margin: "0 0 4px", fontSize: "0.875rem", fontWeight: 500, color: "#1A1A2E", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {post.title}
-                      </p>
-                      {post.selftext && (
-                        <p style={{ margin: "0 0 6px", fontSize: "0.8rem", color: "#6B7280", fontStyle: "italic" }}>
-                          {post.selftext.slice(0, 120)}{post.selftext.length > 120 ? "..." : ""}
-                        </p>
-                      )}
-                      <div style={{ display: "flex", gap: 12, fontSize: "0.75rem" }}>
-                        <span style={{ color: "#0D9488" }}>▲ {post.score}</span>
-                        <span style={{ color: "#6B7280" }}>{post.num_comments} comments</span>
-                        <span style={{ color: "#9CA3AF" }}>r/{post.subreddit}</span>
-                      </div>
-                    </a>
-                  ))}
-                  <a
-                    href={`https://www.reddit.com/r/LSAT/search/?q=${encodeURIComponent(resource.reddit_search_term || resource.resource_name || "")}&sort=top`}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ display: "block", marginTop: 8, fontSize: "0.8rem", color: "#0D9488", fontWeight: 500 }}
-                  >
-                    See all Reddit discussions →
-                  </a>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* RIGHT */}
-          <div className="space-y-5">
-            {/* Your Status */}
-            <div className="rounded-2xl border bg-white p-6" style={{ borderColor: "#E5E7EB", boxShadow: "0 2px 20px rgba(0,0,0,0.06)" }}>
-              <h2 className="mb-3 text-base font-semibold" style={{ color: "#1A1A2E" }}>Your Status</h2>
-              {!isSignedIn ? (
-                <p className="text-sm" style={{ color: "#9CA3AF" }}>
-                  <Link to="/auth" style={{ color: "#0D9488" }}>Sign in</Link> to track your progress.
-                </p>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  {ACTION_CONFIG.map(({ id: actionId, label, Icon, activeStyle, defaultStyle }) => {
-                    const isActive = currentAction === actionId;
-                    return (
-                      <button
-                        key={actionId}
-                        onClick={() => handleAction(actionId)}
-                        style={{
-                          ...(isActive ? activeStyle : defaultStyle),
-                          borderRadius: 8, padding: "9px 14px", fontSize: "0.85rem", fontWeight: 500,
-                          display: "inline-flex", alignItems: "center", gap: 6,
-                          transition: "all 0.15s", cursor: "pointer", width: "100%", justifyContent: "flex-start",
-                        }}
-                      >
-                        <Icon className="h-4 w-4" />
-                        {label}
-                      </button>
                     );
                   })}
-                  <div style={{ borderTop: "1px solid #E5E7EB", marginTop: 4, paddingTop: 8 }}>
-                    <button
-                      onClick={handleAddToCurriculum}
-                      disabled={inCurriculum}
-                      style={inCurriculum
-                        ? { background: "#F0FDF4", border: "1.5px solid #16A34A", color: "#16A34A", borderRadius: 8, padding: "10px", fontSize: "0.875rem", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 6, width: "100%", justifyContent: "center", cursor: "default" }
-                        : { background: "white", border: "1.5px solid #0D9488", color: "#0D9488", borderRadius: 8, padding: "10px", fontSize: "0.875rem", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 6, width: "100%", justifyContent: "center", cursor: "pointer" }
-                      }
-                    >
-                      <BookPlus className="h-4 w-4" />
-                      {inCurriculum ? "✓ Added to Curriculum" : "Add to Study Curriculum"}
-                    </button>
-                    {curriculumNote && (
-                      <p style={{ marginTop: 6, fontSize: "0.8rem", color: curriculumNote.startsWith("Sign") ? "#6B7280" : "#DC2626", textAlign: "center" }}>
-                        {curriculumNote}
-                      </p>
-                    )}
-                  </div>
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* BELOW PLAYER: meta + actions */}
+          <div style={{ marginBottom: 24 }}>
+            {/* Series progress bar */}
+            {hasSeries && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <span style={{ fontSize: "0.85rem", color: "#6B7280" }}>{watchedCount} of {playlistVideos.length} videos watched</span>
+                <div style={{ width: 140, height: 6, borderRadius: 99, backgroundColor: "#E5E7EB", overflow: "hidden" }}>
+                  <div style={{ height: "100%", borderRadius: 99, backgroundColor: "#0D9488", width: `${playlistVideos.length > 0 ? (watchedCount / playlistVideos.length) * 100 : 0}%`, transition: "width 0.4s" }} />
+                </div>
+              </div>
+            )}
+
+            {/* Resource title */}
+            <h1 style={{ fontFamily: "Inter, sans-serif", fontSize: "1.4rem", fontWeight: 700, color: "#1A1A2E", margin: "0 0 4px", lineHeight: 1.3 }}>
+              {resource.resource_name ?? "Untitled"}
+            </h1>
+            {hasSeries && currentVideo && (
+              <p style={{ fontSize: "0.95rem", color: "#4B5563", margin: "0 0 8px" }}>{currentVideo.title}</p>
+            )}
+
+            {/* Tag pills */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", marginBottom: 14 }}>
+              {resource.category && (
+                <span style={{ borderRadius: 99, padding: "3px 10px", fontSize: "0.75rem", fontWeight: 600, color: "white", background: "#0D9488" }}>{resource.category}</span>
+              )}
+              {resource.section_focus && (
+                <span style={{ borderRadius: 99, padding: "3px 10px", fontSize: "0.75rem", fontWeight: 500, background: "#F3F4F6", color: "#4B5563" }}>{resource.section_focus}</span>
+              )}
+              <span style={{ borderRadius: 99, padding: "3px 10px", fontSize: "0.75rem", fontWeight: 500, background: "#F3F4F6", color: "#4B5563" }}>{costLabel}</span>
+              {whyText && (
+                <span style={{ borderRadius: 99, padding: "3px 10px", fontSize: "0.75rem", fontWeight: 600, background: "#F0FDFA", color: "#0D9488" }}>⭐ Best Match</span>
+              )}
+              <span style={{ fontSize: "0.85rem", color: "#6B7280" }}>Score: {scoreRange}</span>
+            </div>
+
+            {/* Action buttons */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+              {hasSeries && currentVideo && (
+                watchedVideoIds.has(currentVideo.videoId) ? (
+                  <button disabled style={{ background: "#F0FDF4", border: "1px solid #16A34A", color: "#16A34A", borderRadius: 8, padding: "9px 14px", fontSize: "0.875rem", fontWeight: 500, cursor: "default", display: "inline-flex", alignItems: "center", gap: 6 }}>✓ Watched</button>
+                ) : (
+                  <button onClick={handleMarkWatched} style={{ background: "white", border: "1px solid #E5E7EB", color: "#1A1A2E", borderRadius: 8, padding: "9px 14px", fontSize: "0.875rem", fontWeight: 500, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                    <Check size={14} />Mark as Watched
+                  </button>
+                )
+              )}
+              {hasSeries && (
+                <button onClick={() => setCurrentVideoIndex(i => i + 1)} disabled={isLastVideo}
+                  style={{ background: "white", border: `1.5px solid ${isLastVideo ? "#D1D5DB" : "#0D9488"}`, color: isLastVideo ? "#9CA3AF" : "#0D9488", borderRadius: 8, padding: "9px 16px", fontSize: "0.875rem", fontWeight: 500, cursor: isLastVideo ? "not-allowed" : "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                  Next →
+                </button>
+              )}
+              <button onClick={handleAddToCurriculum} disabled={inCurriculum}
+                style={inCurriculum
+                  ? { background: "#F0FDF4", border: "1.5px solid #16A34A", color: "#16A34A", borderRadius: 8, padding: "9px 16px", fontSize: "0.875rem", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 6, cursor: "default" }
+                  : { background: "white", border: "1.5px solid #0D9488", color: "#0D9488", borderRadius: 8, padding: "9px 16px", fontSize: "0.875rem", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer" }
+                }>
+                <BookPlus size={14} />
+                {inCurriculum ? "✓ Added to Curriculum" : "Add to Study Curriculum"}
+              </button>
+              {resource.url && (
+                <a href={resource.url} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#0D9488", color: "white", borderRadius: 8, padding: "9px 16px", fontSize: "0.875rem", fontWeight: 500, textDecoration: "none" }}>
+                  Visit Resource <ExternalLink size={14} />
+                </a>
               )}
             </div>
+            {curriculumNote && <p style={{ marginTop: 6, fontSize: "0.8rem", color: curriculumNote.startsWith("Sign") ? "#6B7280" : "#DC2626", margin: "6px 0 0" }}>{curriculumNote}</p>}
+          </div>
 
-            {/* Community */}
-            <div className="rounded-2xl border bg-white p-6" style={{ borderColor: "#E5E7EB", boxShadow: "0 2px 20px rgba(0,0,0,0.06)" }}>
-              <h2 className="mb-3 text-base font-semibold" style={{ color: "#1A1A2E" }}>Community</h2>
-              <div className="space-y-2">
-                {(
-                  [
-                    ["Completed", communityCounts.completed],
-                    ["Saved", communityCounts.saved],
-                    ["Skipped", communityCounts.skipped],
-                  ] as [string, number][]
-                ).map(([label, count]) => (
-                  <div key={label} className="flex items-center justify-between text-sm">
-                    <span style={{ color: "#4B5563" }}>{label}</span>
-                    <span className="font-semibold" style={{ color: "#1A1A2E" }}>{count}</span>
-                  </div>
-                ))}
-              </div>
+          {/* BOTTOM: two columns */}
+          <div className="yt-bottom-cols" style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {aboutCard}
+              {redditCard}
             </div>
-
-            {/* Details */}
-            <div className="rounded-2xl border bg-white p-6" style={{ borderColor: "#E5E7EB", boxShadow: "0 2px 20px rgba(0,0,0,0.06)" }}>
-              <h2 className="mb-3 text-base font-semibold" style={{ color: "#1A1A2E" }}>Details</h2>
-              <div className="space-y-2">
-                {(
-                  [
+            <div className="yt-right-col" style={{ width: 340, flexShrink: 0 }}>
+              {/* Your Status */}
+              <div style={{ background: "white", border: "1px solid #E5E7EB", borderRadius: 12, padding: 24, marginBottom: 16 }}>
+                <h2 style={{ fontWeight: 600, fontSize: "1rem", color: "#1A1A2E", margin: "0 0 12px" }}>Your Status</h2>
+                {!isSignedIn ? (
+                  <p style={{ fontSize: "0.875rem", color: "#9CA3AF", margin: 0 }}>
+                    <Link to="/auth" style={{ color: "#0D9488" }}>Sign in</Link> to track your progress.
+                  </p>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {ACTION_CONFIG.map(({ id: actionId, label, Icon, activeStyle, defaultStyle }) => {
+                      const isActive = currentAction === actionId;
+                      return (
+                        <button key={actionId} onClick={() => handleAction(actionId)}
+                          style={{ ...(isActive ? activeStyle : defaultStyle), borderRadius: 8, padding: "9px 14px", fontSize: "0.85rem", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 6, transition: "all 0.15s", cursor: "pointer", width: "100%", justifyContent: "flex-start" }}>
+                          <Icon className="h-4 w-4" />{label}
+                        </button>
+                      );
+                    })}
+                    <div style={{ borderTop: "1px solid #E5E7EB", paddingTop: 8, marginTop: 4, display: "flex", flexDirection: "column", gap: 8 }}>
+                      {addToCurriculumBtn(true)}
+                      {hasSeries && (
+                        <>
+                          <button onClick={handleAddSeriesToCurriculum} style={{ background: "white", border: "1.5px solid #0D9488", color: "#0D9488", borderRadius: 8, padding: "10px", fontSize: "0.875rem", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 6, width: "100%", justifyContent: "center", cursor: "pointer" }}>
+                            <BookPlus className="h-4 w-4" />Add Series to Study Curriculum
+                          </button>
+                          <button onClick={() => toast("Learning Hub coming soon — finish setting up your hub first!")} style={{ background: "white", border: "1.5px solid #0D9488", color: "#0D9488", borderRadius: 8, padding: "10px", fontSize: "0.875rem", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 6, width: "100%", justifyContent: "center", cursor: "pointer" }}>
+                            <BookPlus className="h-4 w-4" />Add Series to Learning Hub
+                          </button>
+                        </>
+                      )}
+                      {curriculumNote && <p style={{ fontSize: "0.8rem", color: curriculumNote.startsWith("Sign") ? "#6B7280" : "#DC2626", textAlign: "center", margin: 0 }}>{curriculumNote}</p>}
+                    </div>
+                  </div>
+                )}
+              </div>
+              {/* Details */}
+              <div style={{ background: "white", border: "1px solid #E5E7EB", borderRadius: 12, padding: 24 }}>
+                <h2 style={{ fontWeight: 600, fontSize: "1rem", color: "#1A1A2E", margin: "0 0 12px" }}>Details</h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {([
                     ["Section", sectionLabel],
                     ["Cost", costLabel],
                     ["Weekly Hours", resource.weekly_hours || "Varies"],
                     ["Score Range", scoreRange],
                     ...(resource.format ? [["Format", resource.format]] : []),
-                  ] as [string, string][]
-                ).map(([label, value]) => (
-                  <div key={label} className="flex items-start justify-between gap-2 text-sm">
-                    <span style={{ color: "#6B7280" }}>{label}</span>
-                    <span className="text-right font-medium" style={{ color: "#1A1A2E" }}>{value}</span>
-                  </div>
-                ))}
+                  ] as [string, string][]).map(([label, value]) => (
+                    <div key={label} style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: "0.875rem" }}>
+                      <span style={{ color: "#6B7280" }}>{label}</span>
+                      <span style={{ fontWeight: 500, color: "#1A1A2E", textAlign: "right" }}>{value}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Bottom CTA */}
-        {resource.url && (
-          <div className="mt-10 text-center">
-            <a
-              href={resource.url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 font-medium text-white transition-opacity hover:opacity-90"
-              style={{ background: "#0D9488", borderRadius: 99, padding: "14px 36px", fontSize: "1rem" }}
-            >
-              Visit Resource
-              <ExternalLink className="h-4 w-4" />
-            </a>
+        </main>
+      ) : (
+        /* ── NON-YOUTUBE LAYOUT ───────────────────────────────────────────── */
+        <main className="mx-auto max-w-4xl px-6 pb-24 pt-8">
+          {/* Hero */}
+          <div className="mb-8">
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <span className="rounded-full px-3 py-1 text-xs font-bold text-white" style={{ background: "#0D9488" }}>Resource</span>
+              {resource.category && (
+                <span className="rounded-full px-3 py-1 text-xs font-medium" style={{ background: "#F3F4F6", color: "#6B7280" }}>{resource.category}</span>
+              )}
+            </div>
+            <h1 className="font-bold leading-tight" style={{ fontFamily: "'Playfair Display', serif", fontSize: "2rem", color: "#1A1A2E" }}>
+              {resource.resource_name ?? "Untitled"}
+            </h1>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {tags.map(tag => (
+                <span key={tag} className="rounded-full px-2.5 py-0.5 text-xs font-medium" style={{ background: "#F3F4F6", color: "#4B5563" }}>{tag}</span>
+              ))}
+              <span className="rounded-full px-2.5 py-0.5 text-xs font-medium" style={{ background: "#E1F5EE", color: "#0D9488" }}>Score: {scoreRange}</span>
+            </div>
           </div>
-        )}
-      </main>
+
+          {/* Two-column grid (no Community card) */}
+          <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+            <div className="space-y-5">
+              {aboutCard}
+              {redditCard}
+            </div>
+            <div className="space-y-5">
+              {/* Your Status */}
+              <div className="rounded-2xl border bg-white p-6" style={{ borderColor: "#E5E7EB", boxShadow: "0 2px 20px rgba(0,0,0,0.06)" }}>
+                <h2 className="mb-3 text-base font-semibold" style={{ color: "#1A1A2E" }}>Your Status</h2>
+                {!isSignedIn ? (
+                  <p className="text-sm" style={{ color: "#9CA3AF" }}>
+                    <Link to="/auth" style={{ color: "#0D9488" }}>Sign in</Link> to track your progress.
+                  </p>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {ACTION_CONFIG.map(({ id: actionId, label, Icon, activeStyle, defaultStyle }) => {
+                      const isActive = currentAction === actionId;
+                      return (
+                        <button key={actionId} onClick={() => handleAction(actionId)}
+                          style={{ ...(isActive ? activeStyle : defaultStyle), borderRadius: 8, padding: "9px 14px", fontSize: "0.85rem", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 6, transition: "all 0.15s", cursor: "pointer", width: "100%", justifyContent: "flex-start" }}>
+                          <Icon className="h-4 w-4" />{label}
+                        </button>
+                      );
+                    })}
+                    <div style={{ borderTop: "1px solid #E5E7EB", marginTop: 4, paddingTop: 8 }}>
+                      {addToCurriculumBtn(true)}
+                      {curriculumNote && <p style={{ marginTop: 6, fontSize: "0.8rem", color: curriculumNote.startsWith("Sign") ? "#6B7280" : "#DC2626", textAlign: "center" }}>{curriculumNote}</p>}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Details */}
+              <div className="rounded-2xl border bg-white p-6" style={{ borderColor: "#E5E7EB", boxShadow: "0 2px 20px rgba(0,0,0,0.06)" }}>
+                <h2 className="mb-3 text-base font-semibold" style={{ color: "#1A1A2E" }}>Details</h2>
+                <div className="space-y-2">
+                  {([
+                    ["Section", sectionLabel],
+                    ["Cost", costLabel],
+                    ["Weekly Hours", resource.weekly_hours || "Varies"],
+                    ["Score Range", scoreRange],
+                    ...(resource.format ? [["Format", resource.format]] : []),
+                  ] as [string, string][]).map(([label, value]) => (
+                    <div key={label} className="flex items-start justify-between gap-2 text-sm">
+                      <span style={{ color: "#6B7280" }}>{label}</span>
+                      <span className="text-right font-medium" style={{ color: "#1A1A2E" }}>{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom CTA */}
+          {resource.url && (
+            <div className="mt-10 text-center">
+              <a href={resource.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 font-medium text-white transition-opacity hover:opacity-90" style={{ background: "#0D9488", borderRadius: 99, padding: "14px 36px", fontSize: "1rem" }}>
+                Visit Resource <ExternalLink className="h-4 w-4" />
+              </a>
+            </div>
+          )}
+        </main>
+      )}
     </div>
   );
 };
