@@ -9,13 +9,74 @@ import { supabase } from "@/integrations/supabase/client";
 const getYouTubeInfo = (url: string) => {
   try {
     const u = new URL(url);
+    const isYT = u.hostname.includes("youtube.com") || u.hostname.includes("youtu.be");
+    if (!isYT) return { videoId: null, playlistId: null, isPlaylist: false, isChannel: false };
     const playlistId = u.searchParams.get("list");
     const videoId = u.hostname.includes("youtu.be")
       ? u.pathname.slice(1)
       : u.searchParams.get("v");
-    return { videoId, playlistId, isPlaylist: !!playlistId };
+    if (playlistId) return { videoId, playlistId, isPlaylist: true, isChannel: false };
+    if (videoId) return { videoId, playlistId: null, isPlaylist: false, isChannel: false };
+    const p = u.pathname;
+    const isChannel =
+      p.startsWith("/@") || p.includes("/channel/") || p.includes("/c/") || p.includes("/user/");
+    return { videoId: null, playlistId: null, isPlaylist: false, isChannel };
   } catch {
-    return { videoId: null, playlistId: null, isPlaylist: false };
+    return { videoId: null, playlistId: null, isPlaylist: false, isChannel: false };
+  }
+};
+
+const fetchChannelUploads = async (
+  channelUrl: string
+): Promise<{ playlistId: string; videos: any[] } | null> => {
+  const apiKey = import.meta.env.VITE_YOUTUBE_API_KEY;
+
+  try {
+    const u = new URL(channelUrl);
+    const pathname = u.pathname;
+
+    let channelParam = "";
+    if (pathname.startsWith("/@")) {
+      channelParam = `forHandle=${encodeURIComponent(pathname.slice(2))}`;
+    } else if (pathname.includes("/channel/")) {
+      channelParam = `id=${pathname.split("/channel/")[1].split("/")[0]}`;
+    } else if (pathname.includes("/c/")) {
+      channelParam = `forUsername=${pathname.split("/c/")[1].split("/")[0]}`;
+    } else if (pathname.includes("/user/")) {
+      channelParam = `forUsername=${pathname.split("/user/")[1].split("/")[0]}`;
+    }
+
+    if (!channelParam) return null;
+
+    const channelRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/channels?part=contentDetails,snippet&${channelParam}&key=${apiKey}`
+    );
+    const channelJson = await channelRes.json();
+    console.log("[YouTube API] channel result:", channelJson);
+
+    const uploadsPlaylistId =
+      channelJson.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+    if (!uploadsPlaylistId) return null;
+
+    const videosRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadsPlaylistId}&maxResults=50&key=${apiKey}`
+    );
+    const videosJson = await videosRes.json();
+    console.log("[YouTube API] videos result:", videosJson);
+
+    const videos =
+      videosJson.items?.map((item: any, index: number) => ({
+        videoId: item.snippet.resourceId.videoId,
+        title: item.snippet.title,
+        thumbnail: item.snippet.thumbnails?.default?.url,
+        description: item.snippet.description,
+        position: index,
+      })) ?? [];
+
+    return { playlistId: uploadsPlaylistId, videos };
+  } catch (err) {
+    console.error("[YouTube channel fetch error]", err);
+    return null;
   }
 };
 
@@ -104,7 +165,7 @@ const ResourceProfile = () => {
 
   // ── Derived values ────────────────────────────────────────────────────────
   const ytInfo = resource?.url ? getYouTubeInfo(resource.url) : { videoId: null, playlistId: null, isPlaylist: false };
-  const { videoId: ytVideoId, playlistId: ytPlaylistId, isPlaylist } = ytInfo;
+  const { videoId: ytVideoId, playlistId: ytPlaylistId, isPlaylist, isChannel } = ytInfo;
   const currentVideo = playlistVideos[currentVideoIndex] ?? null;
   const watchedCount = playlistVideos.filter(v => watchedVideoIds.has(v.videoId)).length;
 
@@ -258,9 +319,47 @@ const ResourceProfile = () => {
     fetchPlaylist();
   }, [isPlaylist, ytPlaylistId, resource?.id, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── Fetch channel uploads ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (!isChannel || !resource) return;
+
+    const run = async () => {
+      setPlaylistLoading(true);
+      try {
+        const result = await fetchChannelUploads(resource.url!);
+        if (!result || result.videos.length === 0) {
+          setPlaylistVideos([]);
+          return;
+        }
+
+        let watchedSet = new Set<string>();
+        if (user && id) {
+          const { data: progressData } = await (supabase as any)
+            .from("video_progress")
+            .select("youtube_video_id")
+            .eq("clerk_id", user.id)
+            .eq("resource_id", id);
+          watchedSet = new Set((progressData ?? []).map((r: any) => r.youtube_video_id as string));
+        }
+
+        setPlaylistVideos(result.videos);
+        setWatchedVideoIds(watchedSet);
+        const firstUnwatched = result.videos.findIndex((v: any) => !watchedSet.has(v.videoId));
+        setCurrentVideoIndex(firstUnwatched >= 0 ? firstUnwatched : 0);
+      } catch (err) {
+        console.error("[Channel fetch error]", err);
+        setPlaylistVideos([]);
+      } finally {
+        setPlaylistLoading(false);
+      }
+    };
+
+    run();
+  }, [isChannel, resource?.id, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Init YT IFrame API player ─────────────────────────────────────────────
   useEffect(() => {
-    if (!isPlaylist || playlistVideos.length === 0) return;
+    if (playlistVideos.length === 0) return;
 
     let cancelled = false;
     const playerId = playerIdRef.current;
@@ -315,7 +414,7 @@ const ResourceProfile = () => {
       try { playerRef.current?.destroy(); } catch {}
       playerRef.current = null;
     };
-  }, [isPlaylist, playlistVideos.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [playlistVideos.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Handle video index changes ────────────────────────────────────────────
   useEffect(() => {
@@ -522,12 +621,14 @@ const ResourceProfile = () => {
         {resource.url && (
           <>
             {/* ── SERIES PLAYER ── */}
-            {isPlaylist && (
+            {(isPlaylist || isChannel) && (
               <>
                 {playlistLoading && (
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "32px 0 20px", color: "#6B7280" }}>
-                    <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#0D9488" }} />
-                    <span style={{ fontSize: "0.875rem" }}>Loading playlist…</span>
+                  <div style={{ maxWidth: 960, margin: "0 auto 20px" }}>
+                    <div
+                      className="animate-pulse"
+                      style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: 12, backgroundColor: "#E5E7EB" }}
+                    />
                   </div>
                 )}
 
@@ -744,7 +845,7 @@ const ResourceProfile = () => {
                 )}
 
                 {/* Fallback: playlist embed when API fails */}
-                {!playlistLoading && playlistVideos.length === 0 && ytPlaylistId && (
+                {!playlistLoading && playlistVideos.length === 0 && isPlaylist && ytPlaylistId && (
                   <div style={{ maxWidth: 960, margin: "0 auto 32px" }}>
                     <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: 12, overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.08)" }}>
                       <iframe
@@ -757,11 +858,31 @@ const ResourceProfile = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Fallback: visit channel card when channel API fails */}
+                {!playlistLoading && playlistVideos.length === 0 && isChannel && (
+                  <div style={{ maxWidth: 960, margin: "0 auto 32px" }}>
+                    <div style={{ background: "white", border: "1px solid #E5E7EB", borderRadius: 12, padding: "32px 24px", textAlign: "center", boxShadow: "0 2px 20px rgba(0,0,0,0.06)" }}>
+                      <p style={{ fontSize: "0.9rem", color: "#4B5563", marginBottom: 16 }}>
+                        Visit this YouTube channel to watch the video series.
+                      </p>
+                      <a
+                        href={resource.url!}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#0D9488", color: "white", borderRadius: 8, padding: "10px 20px", fontSize: "0.875rem", fontWeight: 500, textDecoration: "none" }}
+                      >
+                        Visit Channel
+                        <ExternalLink size={14} />
+                      </a>
+                    </div>
+                  </div>
+                )}
               </>
             )}
 
             {/* ── SINGLE VIDEO EMBED (unchanged) ── */}
-            {!isPlaylist && ytVideoId && (
+            {!isPlaylist && !isChannel && ytVideoId && (
               <div style={{ maxWidth: 960, margin: "0 auto 32px" }}>
                 <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: 12, overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.08)" }}>
                   <iframe
