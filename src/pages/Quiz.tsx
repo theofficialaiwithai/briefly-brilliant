@@ -532,9 +532,6 @@ const Quiz = () => {
                     );
                   })}
                 </div>
-                <p style={{ color: "#6B7280", fontSize: "0.8rem", lineHeight: "1.5", fontStyle: "italic", marginTop: "16px" }}>
-                  * Based on your target date, we'll factor your weekly availability into your resource recommendations.
-                </p>
               </>
             );
           })()}
