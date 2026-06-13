@@ -28,7 +28,7 @@ export type Source =
 export type ScoreBand = "120-149" | "150-159" | "160-169" | "170-180";
 
 export type WeeklyHours = "<5" | "5-10" | "10-20" | "20+";
-export type TestDate = "<4w" | "1-3m" | "3-6m" | "none";
+export type TestDate = "<4w" | "1-3m" | "3-6m" | "none" | "specific_date";
 export type Budget = "free" | "under_200" | "200_500" | "500_1500" | "1500_plus";
 export type SectionObstacle =
   | "Logical Reasoning"

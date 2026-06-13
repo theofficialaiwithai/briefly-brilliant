@@ -43,6 +43,7 @@ const DATE_OPTIONS: { value: TestDate; label: string; sub: string }[] = [
   { value: "1-3m", label: "1–3 months", sub: "I have some runway" },
   { value: "3-6m", label: "3–6 months", sub: "I can go deep" },
   { value: "none", label: "Not scheduled yet", sub: "I'm still exploring" },
+  { value: "specific_date", label: "I have a specific date", sub: "Set your exact target date" },
 ];
 
 const BUDGET_OPTIONS: { value: Budget; label: string; sub: string }[] = [
@@ -65,6 +66,28 @@ const EXPERIENCE_OPTIONS: { value: Experience; label: string }[] = [
   { value: "first_time", label: "No, this is my first time" },
   { value: "retaker", label: "Yes, I am retaking it" },
 ];
+
+const TODAY = new Date().toISOString().split("T")[0];
+
+function getHoursTip(testDate: TestDate | null, specificDate: string): string | null {
+  if (!testDate) return null;
+  if (testDate === "specific_date") {
+    if (!specificDate) return null;
+    const weeks = Math.round(
+      (new Date(specificDate).getTime() - Date.now()) / (7 * 24 * 60 * 60 * 1000)
+    );
+    if (weeks < 4) return "⭐ Based on your timeline, we recommend 25+ hrs/week. This is an intensive schedule — consider whether your timeline allows for meaningful prep.";
+    if (weeks < 9) return "⭐ Based on your timeline, we recommend 20–25 hrs/week to hit ~150 total study hours.";
+    if (weeks < 17) return "⭐ Based on your timeline, we recommend 15–20 hrs/week — the most common path to a meaningful score improvement.";
+    if (weeks < 26) return "⭐ Based on your timeline, we recommend 12–15 hrs/week to reach 250–300 total hours.";
+    if (weeks < 52) return "⭐ Based on your timeline, we recommend 8–12 hrs/week. A steady pace builds deep skills.";
+    return "⭐ Based on your timeline, 5–8 hrs/week is sustainable. You have time to build a strong foundation.";
+  }
+  if (testDate === "<4w") return "⭐ Based on your timeline, we recommend 25+ hrs/week. This is an intensive schedule — consider whether your timeline allows for meaningful prep.";
+  if (testDate === "1-3m") return "⭐ Based on your timeline, we recommend 20–25 hrs/week to hit ~150 total study hours.";
+  if (testDate === "3-6m") return "⭐ Based on your timeline, we recommend 15–20 hrs/week — the most common path to a meaningful score improvement.";
+  return null;
+}
 
 const TOTAL_STEPS = 8;
 
@@ -113,6 +136,7 @@ const Quiz = () => {
   const [budget, setBudget] = useState<Budget | null>(null);
   const [learningFormats, setLearningFormats] = useState<LearningFormat[]>([]);
   const [experience, setExperience] = useState<Experience | null>(null);
+  const [specificDate, setSpecificDate] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -137,9 +161,9 @@ const Quiz = () => {
       case 3:
         return sections.length > 0;
       case 4:
-        return weeklyHours !== null;
+        return testDate !== null && (testDate !== "specific_date" || specificDate !== "");
       case 5:
-        return testDate !== null;
+        return weeklyHours !== null;
       case 6:
         return budget !== null;
       case 7:
@@ -149,7 +173,7 @@ const Quiz = () => {
       default:
         return false;
     }
-  }, [step, currentScore, targetScore, sections, weeklyHours, testDate, budget, learningFormats, experience]);
+  }, [step, currentScore, targetScore, sections, weeklyHours, testDate, specificDate, budget, learningFormats, experience]);
 
   const handleNext = async () => {
     if (step < TOTAL_STEPS) {
@@ -194,6 +218,11 @@ const Quiz = () => {
       );
       if (!res.ok) throw new Error(`Request failed (${res.status})`);
       const data = await res.json();
+      sessionStorage.setItem("quizAnswers", JSON.stringify({
+        targetTestDate: testDate,
+        ...(testDate === "specific_date" && specificDate ? { targetDate: specificDate } : {}),
+        weeklyHours,
+      }));
       navigate("/quiz/results", {
         state: { recommendations: data.recommendations ?? [] },
       });
@@ -395,38 +424,10 @@ const Quiz = () => {
           {step === 4 && (
             <>
               <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
-                How much time can you dedicate to studying each week?
-              </h1>
-              <div className="mt-8 flex flex-wrap gap-2">
-                {HOURS_OPTIONS.map((o) => {
-                  const active = weeklyHours === o.value;
-                  return (
-                    <button
-                      key={o.value}
-                      type="button"
-                      onClick={() => setWeeklyHours(o.value)}
-                      className={cn(
-                        "rounded-full border px-5 py-2.5 text-sm font-medium transition-all",
-                        active
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-background text-muted-foreground hover:border-foreground/20 hover:text-foreground"
-                      )}
-                    >
-                      {o.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </>
-          )}
-
-          {step === 5 && (
-            <>
-              <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
                 When is your target test date?
               </h1>
               <div className="mt-8 grid gap-3">
-                {DATE_OPTIONS.map((o) => {
+                {DATE_OPTIONS.filter((o) => o.value !== "specific_date").map((o) => {
                   const active = testDate === o.value;
                   return (
                     <button
@@ -445,9 +446,98 @@ const Quiz = () => {
                     </button>
                   );
                 })}
+                {(() => {
+                  const o = DATE_OPTIONS.find((o) => o.value === "specific_date")!;
+                  const active = testDate === "specific_date";
+                  return (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setTestDate("specific_date")}
+                        className={cn(
+                          "rounded-xl border p-4 text-left transition-all",
+                          active
+                            ? "border-primary bg-primary-soft shadow-card"
+                            : "border-border bg-background hover:border-foreground/20 hover:bg-muted/40"
+                        )}
+                      >
+                        <div className="font-semibold text-foreground">{o.label}</div>
+                        <div className="text-sm text-muted-foreground">{o.sub}</div>
+                      </button>
+                      {active && (
+                        <input
+                          type="date"
+                          min={TODAY}
+                          value={specificDate}
+                          onChange={(e) => setSpecificDate(e.target.value)}
+                          style={{
+                            background: "white",
+                            border: "1px solid #E5E7EB",
+                            borderRadius: "8px",
+                            padding: "10px 14px",
+                            width: "100%",
+                            marginTop: "8px",
+                          }}
+                        />
+                      )}
+                    </>
+                  );
+                })()}
               </div>
+              <p style={{ color: "#6B7280", fontSize: "0.8rem", lineHeight: "1.5", fontStyle: "italic", marginTop: "16px" }}>
+                * Most students study 250–300 total hours. The 3–4 month timeline at 15–20 hrs/week is the most common path to a meaningful score improvement. If you're aiming for a 10+ point jump, plan for at least 4 months.
+              </p>
             </>
           )}
+
+          {step === 5 && (() => {
+            const tip = getHoursTip(testDate, specificDate);
+            return (
+              <>
+                <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
+                  How much time can you dedicate to studying each week?
+                </h1>
+                {tip && (
+                  <div
+                    style={{
+                      background: "#F0FDFA",
+                      border: "1px solid #0D9488",
+                      borderRadius: "8px",
+                      padding: "10px 14px",
+                      marginTop: "16px",
+                      marginBottom: "12px",
+                      fontSize: "0.85rem",
+                    }}
+                  >
+                    {tip}
+                  </div>
+                )}
+                <div className={cn("flex flex-wrap gap-2", !tip ? "mt-8" : "")}>
+                  {HOURS_OPTIONS.map((o) => {
+                    const active = weeklyHours === o.value;
+                    return (
+                      <button
+                        key={o.value}
+                        type="button"
+                        onClick={() => setWeeklyHours(o.value)}
+                        className={cn(
+                          "rounded-full border px-5 py-2.5 text-sm font-medium transition-all",
+                          active
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-background text-muted-foreground hover:border-foreground/20 hover:text-foreground"
+                        )}
+                      >
+                        {o.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p style={{ color: "#6B7280", fontSize: "0.8rem", lineHeight: "1.5", fontStyle: "italic", marginTop: "16px" }}>
+                  * Based on your target date, we'll factor your weekly availability into your resource recommendations.
+                </p>
+              </>
+            );
+          })()}
 
           {step === 6 && (
             <>
