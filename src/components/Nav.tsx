@@ -1,5 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { SignedIn, SignedOut, useUser } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, useUser, useClerk } from "@clerk/clerk-react";
+import { Settings, Bookmark, LayoutDashboard, LogOut } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { Logo } from "@/components/Logo";
 import { cn } from "@/lib/utils";
 
@@ -12,11 +14,31 @@ const SIGNED_IN_LINKS = [
 
 export const Nav = () => {
   const { user } = useUser();
+  const { signOut } = useClerk();
   const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   const initial =
     user?.firstName?.[0]?.toUpperCase() ??
     user?.emailAddresses?.[0]?.emailAddress?.[0]?.toUpperCase() ??
     "?";
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  const go = (path: string) => {
+    setOpen(false);
+    navigate(path);
+  };
 
   return (
     <header className="border-b border-[#E5E7EB] bg-white">
@@ -38,44 +60,78 @@ export const Nav = () => {
                 {label}
               </NavLink>
             ))}
-            <button
-              onClick={() => navigate("/profile")}
-              aria-label="Profile settings"
-              style={{
-                background: "none",
-                border: "none",
-                padding: 0,
-                cursor: "pointer",
-                borderRadius: "50%",
-                display: "flex",
-              }}
-            >
-              {user?.imageUrl ? (
-                <img
-                  src={user.imageUrl}
-                  alt=""
-                  style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", display: "block" }}
-                />
-              ) : (
+
+            {/* Avatar + dropdown */}
+            <div ref={dropdownRef} style={{ position: "relative" }}>
+              <button
+                onClick={() => setOpen((v) => !v)}
+                aria-label="Account menu"
+                aria-expanded={open}
+                style={{
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  cursor: "pointer",
+                  borderRadius: "50%",
+                  display: "flex",
+                }}
+              >
+                {user?.imageUrl ? (
+                  <img
+                    src={user.imageUrl}
+                    alt=""
+                    style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", display: "block" }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: "50%",
+                      backgroundColor: "#0D9488",
+                      color: "white",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 14,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {initial}
+                  </div>
+                )}
+              </button>
+
+              {open && (
                 <div
                   style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: "50%",
-                    backgroundColor: "#0D9488",
-                    color: "white",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 14,
-                    fontWeight: 700,
+                    position: "absolute",
+                    top: "calc(100% + 10px)",
+                    right: 0,
+                    minWidth: 160,
+                    backgroundColor: "white",
+                    border: "1px solid #E5E7EB",
+                    borderRadius: 8,
+                    boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+                    zIndex: 50,
+                    overflow: "hidden",
                   }}
                 >
-                  {initial}
+                  <DropdownItem icon={<Settings size={14} />} label="Profile & Settings" onClick={() => go("/profile")} />
+                  <DropdownItem icon={<Bookmark size={14} />} label="My Library" onClick={() => go("/library")} />
+                  <DropdownItem icon={<LayoutDashboard size={14} />} label="Dashboard" onClick={() => go("/dashboard")} />
+                  <div style={{ height: 1, backgroundColor: "#E5E7EB", margin: "4px 0" }} />
+                  <DropdownItem
+                    icon={<LogOut size={14} />}
+                    label="Sign out"
+                    onClick={() => { setOpen(false); signOut({ redirectUrl: "/" }); }}
+                    danger
+                  />
                 </div>
               )}
-            </button>
+            </div>
           </SignedIn>
+
           <SignedOut>
             <NavLink
               to="/auth"
@@ -97,3 +153,42 @@ export const Nav = () => {
     </header>
   );
 };
+
+function DropdownItem({
+  icon,
+  label,
+  onClick,
+  danger,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  danger?: boolean;
+}) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        width: "100%",
+        padding: "10px 14px",
+        background: hovered ? "#F9FAFB" : "none",
+        border: "none",
+        cursor: "pointer",
+        fontSize: "0.875rem",
+        fontFamily: "Inter, sans-serif",
+        color: danger ? "#EF4444" : "#4B5563",
+        textAlign: "left",
+        transition: "background 0.1s",
+      }}
+    >
+      {icon}
+      {label}
+    </button>
+  );
+}
