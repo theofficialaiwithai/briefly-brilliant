@@ -1,10 +1,21 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Bookmark, CheckCircle, ExternalLink, Loader2, X } from "lucide-react";
+import { ArrowLeft, BookPlus, Bookmark, CheckCircle, ExternalLink, Loader2, X } from "lucide-react";
 import { useUser } from "@clerk/clerk-react";
 import { Nav } from "@/components/Nav";
 import { supabase } from "@/integrations/supabase/client";
 
+
+const getYouTubeId = (url: string): string | null => {
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes("youtu.be")) return u.pathname.slice(1);
+    if (u.hostname.includes("youtube.com")) return u.searchParams.get("v");
+  } catch {
+    return null;
+  }
+  return null;
+};
 
 type ResourceData = {
   id: string;
@@ -60,6 +71,8 @@ const ResourceProfile = () => {
   const [whyText, setWhyText] = useState<string | null>(null);
   const [redditPosts, setRedditPosts] = useState<any[]>([]);
   const [redditLoading, setRedditLoading] = useState(true);
+  const [inCurriculum, setInCurriculum] = useState(false);
+  const [curriculumNote, setCurriculumNote] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -111,6 +124,40 @@ const ResourceProfile = () => {
         setCommunityCounts(counts);
       });
   }, [id]);
+
+  useEffect(() => {
+    if (!isSignedIn || !user || !id) return;
+    (supabase as any)
+      .from("curriculum_items")
+      .select("id")
+      .eq("clerk_id", user.id)
+      .eq("resource_id", id)
+      .then(({ data }: { data: { id: string }[] | null }) => {
+        if (data && data.length > 0) setInCurriculum(true);
+      });
+  }, [isSignedIn, user?.id, id]);
+
+  const handleAddToCurriculum = async () => {
+    if (!isSignedIn || !user || !resource) {
+      setCurriculumNote("Sign in to save to your curriculum");
+      setTimeout(() => setCurriculumNote(null), 2000);
+      return;
+    }
+    setInCurriculum(true);
+    const { error } = await (supabase as any).from("curriculum_items").insert({
+      clerk_id: user.id,
+      resource_id: id,
+      title: resource.resource_name,
+      description: resource.description,
+      url: resource.url,
+      type: "resource",
+    });
+    if (error) {
+      setInCurriculum(false);
+      setCurriculumNote("Couldn't add. Try again.");
+      setTimeout(() => setCurriculumNote(null), 3000);
+    }
+  };
 
   const handleAction = async (action: FeedbackAction) => {
     if (!isSignedIn || !user || !id) return;
@@ -252,6 +299,21 @@ const ResourceProfile = () => {
           </div>
         </div>
 
+        {/* YouTube embed */}
+        {resource.url && getYouTubeId(resource.url) && (
+          <div style={{ maxWidth: 960, margin: "0 auto 32px" }}>
+            <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, borderRadius: 12, overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.08)" }}>
+              <iframe
+                src={`https://www.youtube.com/embed/${getYouTubeId(resource.url)}`}
+                title={resource.resource_name ?? ""}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Two-column grid */}
         <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
           {/* LEFT */}
@@ -386,6 +448,24 @@ const ResourceProfile = () => {
                       </button>
                     );
                   })}
+                  <div style={{ borderTop: "1px solid #E5E7EB", marginTop: 4, paddingTop: 8 }}>
+                    <button
+                      onClick={handleAddToCurriculum}
+                      disabled={inCurriculum}
+                      style={inCurriculum
+                        ? { background: "#F0FDF4", border: "1.5px solid #16A34A", color: "#16A34A", borderRadius: 8, padding: "10px", fontSize: "0.875rem", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 6, width: "100%", justifyContent: "center", cursor: "default" }
+                        : { background: "white", border: "1.5px solid #0D9488", color: "#0D9488", borderRadius: 8, padding: "10px", fontSize: "0.875rem", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 6, width: "100%", justifyContent: "center", cursor: "pointer" }
+                      }
+                    >
+                      <BookPlus className="h-4 w-4" />
+                      {inCurriculum ? "✓ Added to Curriculum" : "Add to Study Curriculum"}
+                    </button>
+                    {curriculumNote && (
+                      <p style={{ marginTop: 6, fontSize: "0.8rem", color: curriculumNote.startsWith("Sign") ? "#6B7280" : "#DC2626", textAlign: "center" }}>
+                        {curriculumNote}
+                      </p>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
