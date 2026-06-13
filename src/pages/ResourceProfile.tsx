@@ -4,7 +4,7 @@ import { ArrowLeft, Bookmark, CheckCircle, ExternalLink, Loader2, X } from "luci
 import { useUser } from "@clerk/clerk-react";
 import { Nav } from "@/components/Nav";
 import { supabase } from "@/integrations/supabase/client";
-import { useRedditPosts } from "@/lib/useRedditPosts";
+
 
 type ResourceData = {
   id: string;
@@ -58,6 +58,8 @@ const ResourceProfile = () => {
   const [currentAction, setCurrentAction] = useState<FeedbackAction | null>(null);
   const [communityCounts, setCommunityCounts] = useState({ completed: 0, saved: 0, skipped: 0 });
   const [whyText, setWhyText] = useState<string | null>(null);
+  const [redditPosts, setRedditPosts] = useState<any[]>([]);
+  const [redditLoading, setRedditLoading] = useState(true);
 
   useEffect(() => {
     if (!id) return;
@@ -129,8 +131,24 @@ const ResourceProfile = () => {
     }
   };
 
-  const redditQuery = resource?.reddit_search_term ?? (resource ? `${resource.resource_name} LSAT` : "");
-  const { posts, loading: redditLoading } = useRedditPosts(redditQuery);
+  useEffect(() => {
+    const fetchReddit = async () => {
+      const searchTerm = resource!.reddit_search_term || `${resource!.resource_name} LSAT`;
+      const url = `https://www.reddit.com/r/LSAT/search.json?q=${encodeURIComponent(searchTerm)}&sort=top&t=all&limit=5&restrict_sr=1`;
+      try {
+        const res = await fetch(url, { headers: { Accept: "application/json" } });
+        const json = await res.json();
+        const posts = json?.data?.children?.map((child: any) => child.data) ?? [];
+        setRedditPosts(posts.slice(0, 3));
+      } catch (err) {
+        console.error("[Reddit fetch error]", err);
+        setRedditPosts([]);
+      } finally {
+        setRedditLoading(false);
+      }
+    };
+    if (resource) fetchReddit();
+  }, [resource]);
 
   if (loading) {
     return (
@@ -260,42 +278,70 @@ const ResourceProfile = () => {
             </div>
 
             {/* Reddit */}
-            <div
-              className="rounded-2xl border bg-white p-6"
-              style={{ borderColor: "#E5E7EB", boxShadow: "0 2px 20px rgba(0,0,0,0.06)" }}
-            >
-              <h2 className="mb-3 text-base font-semibold" style={{ color: "#1A1A2E" }}>From r/LSAT</h2>
-              {redditLoading ? (
-                <div className="flex items-center gap-2 py-4 text-sm" style={{ color: "#6B7280" }}>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading discussions…
-                </div>
-              ) : posts.length === 0 ? (
-                <p className="text-sm" style={{ color: "#9CA3AF" }}>No discussions found.</p>
-              ) : (
-                <ul className="space-y-3">
-                  {posts.slice(0, 5).map((post) => (
-                    <li
-                      key={post.permalink}
-                      className="border-b pb-3 last:border-none last:pb-0"
-                      style={{ borderColor: "#F3F4F6" }}
-                    >
-                      <a
-                        href={`https://reddit.com${post.permalink}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="block text-sm font-medium leading-snug hover:underline"
-                        style={{ color: "#1A1A2E" }}
-                      >
-                        {post.title}
-                      </a>
-                      <div className="mt-1 flex items-center gap-3 text-xs" style={{ color: "#9CA3AF" }}>
-                        <span>↑ {post.score}</span>
-                        <span>{post.num_comments} comments</span>
-                      </div>
-                    </li>
+            <div style={{ background: "#fff", border: "1px solid #E5E7EB", borderRadius: 12, padding: 24, marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                <span style={{ color: "#FF4500", fontSize: 18 }}>●</span>
+                <span style={{ fontWeight: 600, color: "#1A1A2E", fontSize: "0.95rem" }}>What Reddit says</span>
+              </div>
+
+              {redditLoading && (
+                <div>
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} style={{ height: 60, background: "#F3F4F6", borderRadius: 8, marginBottom: 10 }} />
                   ))}
-                </ul>
+                </div>
+              )}
+
+              {!redditLoading && redditPosts.length === 0 && (
+                <p style={{ color: "#6B7280", fontSize: "0.875rem", fontStyle: "italic" }}>
+                  No Reddit discussions found for this resource. Try searching{" "}
+                  <a
+                    href={`https://www.reddit.com/r/LSAT/search/?q=${encodeURIComponent(resource.reddit_search_term || resource.resource_name || "")}&sort=top`}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ color: "#0D9488" }}
+                  >
+                    r/LSAT directly →
+                  </a>
+                </p>
+              )}
+
+              {!redditLoading && redditPosts.length > 0 && (
+                <div>
+                  {redditPosts.map((post, i) => (
+                    <a
+                      key={i}
+                      href={`https://reddit.com${post.permalink}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ display: "block", padding: "10px 12px", borderRadius: 8, marginBottom: 8, textDecoration: "none", background: "#FAFAFA", border: "1px solid #F3F4F6" }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "#F0FDFA")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "#FAFAFA")}
+                    >
+                      <p style={{ margin: "0 0 4px", fontSize: "0.875rem", fontWeight: 500, color: "#1A1A2E", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {post.title}
+                      </p>
+                      {post.selftext && (
+                        <p style={{ margin: "0 0 6px", fontSize: "0.8rem", color: "#6B7280", fontStyle: "italic" }}>
+                          {post.selftext.slice(0, 120)}{post.selftext.length > 120 ? "..." : ""}
+                        </p>
+                      )}
+                      <div style={{ display: "flex", gap: 12, fontSize: "0.75rem" }}>
+                        <span style={{ color: "#0D9488" }}>▲ {post.score}</span>
+                        <span style={{ color: "#6B7280" }}>{post.num_comments} comments</span>
+                        <span style={{ color: "#9CA3AF" }}>r/{post.subreddit}</span>
+                      </div>
+                    </a>
+                  ))}
+                  <a
+                    href={`https://www.reddit.com/r/LSAT/search/?q=${encodeURIComponent(resource.reddit_search_term || resource.resource_name || "")}&sort=top`}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ display: "block", marginTop: 8, fontSize: "0.8rem", color: "#0D9488", fontWeight: 500 }}
+                  >
+                    See all Reddit discussions →
+                  </a>
+                </div>
               )}
             </div>
           </div>
