@@ -563,39 +563,63 @@ const ResourceProfile = () => {
   const showSidebar = hasSeries && !playlistLoading;
 
   const handleAddSeriesToHub = async () => {
-    if (!user || !resource) return;
+    if (!user || !resource?.url) return;
+
+    // Check for existing YouTube widget
     const { data: existing } = await (hubSupabase as any)
       .from("hub_widgets")
-      .select("id")
+      .select("id, config")
       .eq("clerk_id", user.id)
       .eq("type", "youtube")
       .maybeSingle();
-    if (existing) {
-      toast("You already have a YouTube widget in your Learning Hub. Update it from the hub directly.");
+
+    if (!existing) {
+      // No widget yet — create one
+      const { data: allWidgets } = await (hubSupabase as any)
+        .from("hub_widgets")
+        .select("position")
+        .eq("clerk_id", user.id)
+        .order("position", { ascending: false })
+        .limit(1);
+      const maxPosition = (allWidgets?.[0]?.position ?? -1) as number;
+      const { error } = await (hubSupabase as any)
+        .from("hub_widgets")
+        .insert({
+          clerk_id: user.id,
+          type: "youtube",
+          title: "YouTube Library",
+          position: maxPosition + 1,
+          config: {
+            sources: [{ id: crypto.randomUUID(), title: resource.resource_name ?? "YouTube", url: resource.url }],
+          },
+          size: "full",
+        });
+      if (error) { toast.error("Couldn't add to hub. Please try again."); return; }
+      toast.success("Added to your Learning Hub video library!", {
+        action: { label: "Go to Hub", onClick: () => navigate("/hub") },
+      });
       return;
     }
-    const { data: allWidgets } = await (hubSupabase as any)
-      .from("hub_widgets")
-      .select("position")
-      .eq("clerk_id", user.id)
-      .order("position", { ascending: false })
-      .limit(1);
-    const maxPosition = (allWidgets?.[0]?.position ?? -1) as number;
+
+    // Widget exists — check sources (handle both old { url } and new { sources } shapes)
+    const cfg = existing.config as { sources?: Array<{ id: string; title: string; url: string }>; url?: string };
+    const sources = cfg.sources ?? (cfg.url ? [{ id: crypto.randomUUID(), title: "My Video", url: cfg.url }] : []);
+
+    if (sources.some((s) => s.url === resource.url)) {
+      toast("Already in your Learning Hub");
+      return;
+    }
+
+    const updatedSources = [
+      ...sources,
+      { id: crypto.randomUUID(), title: resource.resource_name ?? "YouTube", url: resource.url },
+    ];
     const { error } = await (hubSupabase as any)
       .from("hub_widgets")
-      .insert({
-        clerk_id: user.id,
-        type: "youtube",
-        title: resource.resource_name ?? "YouTube",
-        position: maxPosition + 1,
-        config: { url: resource.url },
-        size: "full",
-      });
-    if (error) {
-      toast.error("Couldn't add to hub. Please try again.");
-      return;
-    }
-    toast.success("Added to your Learning Hub! Visit the hub to watch.", {
+      .update({ config: { sources: updatedSources } })
+      .eq("id", existing.id);
+    if (error) { toast.error("Couldn't add to hub. Please try again."); return; }
+    toast.success("Added to your Learning Hub video library!", {
       action: { label: "Go to Hub", onClick: () => navigate("/hub") },
     });
   };

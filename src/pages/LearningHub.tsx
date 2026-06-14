@@ -48,7 +48,8 @@ import type { HubWidget, WidgetSize, WidgetType } from "@/components/hub/types";
 // Config types
 // ─────────────────────────────────────────────────────────────────────────────
 
-type YouTubeConfig = { url?: string };
+type YouTubeSource = { id: string; title: string; url: string };
+type YouTubeConfig = { sources?: YouTubeSource[]; url?: string }; // url kept for migration detection
 type CurriculumItem = { id: string; title: string; url?: string; completed: boolean };
 type CurriculumConfig = { items?: CurriculumItem[] };
 type ScoreEntry = { date: string; section: string; score: number; notes?: string };
@@ -263,95 +264,172 @@ type ContentProps = {
 
 // ── YouTube ──────────────────────────────────────────────────────────────────
 
+function YouTubeEmbed({ source }: { source: YouTubeSource }) {
+  const parsed = parseYTUrl(source.url);
+  if (parsed?.type === "video") {
+    return (
+      <iframe src={`https://www.youtube.com/embed/${parsed.id}`} title={source.title}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen style={{ width: "100%", aspectRatio: "16/9", borderRadius: 8, border: "none", display: "block" }} />
+    );
+  }
+  if (parsed?.type === "playlist") {
+    return (
+      <iframe src={`https://www.youtube.com/embed/videoseries?list=${parsed.id}`} title={source.title}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen style={{ width: "100%", aspectRatio: "16/9", borderRadius: 8, border: "none", display: "block" }} />
+    );
+  }
+  if (parsed?.type === "channel") {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, padding: 24, background: "#F9FAFB", borderRadius: 8, aspectRatio: "16/9", justifyContent: "center" }}>
+        <Youtube size={28} color="#FF0000" />
+        <p style={{ margin: 0, fontSize: "0.85rem", color: "#4B5563", fontFamily: "Inter, sans-serif", textAlign: "center" }}>Channels can't be embedded directly.</p>
+        <a href={source.url} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.8rem", color: "#0D9488", fontFamily: "Inter, sans-serif", textDecoration: "none" }}>
+          Open in YouTube <ExternalLink size={12} />
+        </a>
+      </div>
+    );
+  }
+  return <p style={{ fontSize: "0.85rem", color: "#EF4444", fontFamily: "Inter, sans-serif", margin: 0 }}>Invalid YouTube URL</p>;
+}
+
 function YouTubeWidgetContent({ widget, editMode, onConfigUpdate }: ContentProps) {
   const cfg = widget.config as YouTubeConfig;
-  const [urlInput, setUrlInput] = useState("");
-  const [editingUrl, setEditingUrl] = useState(false);
+  const sources = cfg.sources ?? [];
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [addingManual, setAddingManual] = useState(false);
+  const [manualUrl, setManualUrl] = useState("");
+  const [manualTitle, setManualTitle] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const handleSave = async () => {
-    if (!urlInput.trim()) return;
-    setSaving(true);
-    await onConfigUpdate({ url: urlInput.trim() });
-    setSaving(false);
-    setEditingUrl(false);
-    setUrlInput("");
+  // Clamp when sources shrink (e.g. after removal)
+  useEffect(() => {
+    if (activeIdx >= sources.length && sources.length > 0) {
+      setActiveIdx(sources.length - 1);
+    }
+  }, [sources.length]);
+
+  const clampedIdx = Math.min(activeIdx, Math.max(0, sources.length - 1));
+  const activeSource = sources[clampedIdx] ?? null;
+
+  const handleRemoveSource = async (srcId: string) => {
+    const removedIdx = sources.findIndex((s) => s.id === srcId);
+    const updated = sources.filter((s) => s.id !== srcId);
+    if (removedIdx <= clampedIdx && clampedIdx > 0) setActiveIdx(clampedIdx - 1);
+    await onConfigUpdate({ sources: updated });
   };
 
-  if (!cfg.url) {
+  const handleAddManual = async () => {
+    if (!manualUrl.trim()) return;
+    setSaving(true);
+    const newSrc: YouTubeSource = {
+      id: crypto.randomUUID(),
+      title: manualTitle.trim() || manualUrl.trim(),
+      url: manualUrl.trim(),
+    };
+    await onConfigUpdate({ sources: [...sources, newSrc] });
+    setSaving(false);
+    setManualUrl("");
+    setManualTitle("");
+    setAddingManual(false);
+  };
+
+  const ManualAddForm = (
+    <div style={{ background: "#F9FAFB", borderRadius: 8, padding: 10, display: "flex", flexDirection: "column", gap: 6 }}>
+      <input value={manualUrl} onChange={(e) => setManualUrl(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleAddManual()} placeholder="https://youtube.com/..." style={INPUT_STYLE} />
+      <input value={manualTitle} onChange={(e) => setManualTitle(e.target.value)} placeholder="Title (optional)" style={INPUT_STYLE} />
+      <div style={{ display: "flex", gap: 6 }}>
+        <button onClick={handleAddManual} disabled={saving || !manualUrl.trim()} style={{ ...BTN_PRIMARY, opacity: saving || !manualUrl.trim() ? 0.6 : 1 }}>
+          {saving ? "…" : "Add"}
+        </button>
+        <button onClick={() => { setAddingManual(false); setManualUrl(""); setManualTitle(""); }} style={BTN_GHOST}>Cancel</button>
+      </div>
+    </div>
+  );
+
+  // ── Empty state ──
+  if (sources.length === 0) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, gap: 12, minHeight: 140, textAlign: "center" }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, gap: 10, minHeight: 180, textAlign: "center" }}>
         <Youtube size={32} color="#9CA3AF" />
-        <p style={{ fontSize: "0.85rem", color: "#9CA3AF", margin: 0, fontFamily: "Inter, sans-serif" }}>
-          Add a YouTube URL to embed a video or playlist
+        <p style={{ fontSize: "0.875rem", color: "#9CA3AF", margin: 0, fontFamily: "Inter, sans-serif" }}>No videos added yet</p>
+        <p style={{ fontSize: "0.8rem", color: "#C4C4C4", margin: 0, fontFamily: "Inter, sans-serif", maxWidth: 260 }}>
+          Add a YouTube series from any resource page, or add a URL below
         </p>
         {editMode && (
-          <div style={{ display: "flex", gap: 8, width: "100%", maxWidth: 340 }}>
-            <input
-              value={urlInput}
-              onChange={(e) => setUrlInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSave()}
-              placeholder="https://youtube.com/watch?v=..."
-              style={{ ...INPUT_STYLE, flex: 1 }}
-            />
-            <button onClick={handleSave} disabled={saving || !urlInput.trim()} style={{ ...BTN_PRIMARY, opacity: saving || !urlInput.trim() ? 0.6 : 1 }}>
-              {saving ? "…" : "Save"}
+          addingManual ? ManualAddForm : (
+            <button onClick={() => setAddingManual(true)} style={{ ...BTN_GHOST, borderStyle: "dashed", color: "#9CA3AF" }}>
+              + Add URL manually
             </button>
-          </div>
+          )
         )}
       </div>
     );
   }
 
-  const parsed = parseYTUrl(cfg.url);
-
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      {parsed?.type === "video" && (
-        <iframe
-          src={`https://www.youtube.com/embed/${parsed.id}`}
-          title="YouTube video"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          style={{ width: "100%", aspectRatio: "16/9", borderRadius: 8, border: "none", display: "block" }}
-        />
-      )}
-      {parsed?.type === "playlist" && (
-        <iframe
-          src={`https://www.youtube.com/embed/videoseries?list=${parsed.id}`}
-          title="YouTube playlist"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          style={{ width: "100%", aspectRatio: "16/9", borderRadius: 8, border: "none", display: "block" }}
-        />
-      )}
-      {parsed?.type === "channel" && (
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, padding: 24, background: "#F9FAFB", borderRadius: 8 }}>
-          <Youtube size={28} color="#FF0000" />
-          <p style={{ margin: 0, fontSize: "0.85rem", color: "#4B5563", fontFamily: "Inter, sans-serif", textAlign: "center" }}>
-            Channels can't be embedded directly.
-          </p>
-          <a href={cfg.url} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.8rem", color: "#0D9488", fontFamily: "Inter, sans-serif", textDecoration: "none" }}>
-            Open in YouTube <ExternalLink size={12} />
-          </a>
-        </div>
-      )}
-      {!parsed && (
-        <p style={{ fontSize: "0.85rem", color: "#EF4444", fontFamily: "Inter, sans-serif", margin: 0 }}>
-          Invalid YouTube URL
+      {/* Tab bar */}
+      <div className="yt-tabs" style={{ display: "flex", gap: 4, overflowX: "auto", paddingBottom: 2 }}>
+        {sources.map((src, idx) => {
+          const isActive = idx === clampedIdx;
+          return (
+            <div key={src.id} style={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
+              <button
+                onClick={() => setActiveIdx(idx)}
+                title={src.title}
+                style={{
+                  padding: "5px 12px",
+                  borderRadius: 20,
+                  border: isActive ? "none" : "1px solid #E5E7EB",
+                  background: isActive ? "#0D9488" : "#F9FAFB",
+                  color: isActive ? "white" : "#6B7280",
+                  fontSize: "0.78rem",
+                  fontWeight: isActive ? 600 : 400,
+                  cursor: "pointer",
+                  fontFamily: "Inter, sans-serif",
+                  whiteSpace: "nowrap",
+                  maxWidth: 160,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  transition: "background 0.1s, color 0.1s",
+                }}
+              >
+                {src.title}
+              </button>
+              {editMode && (
+                <button
+                  onClick={() => handleRemoveSource(src.id)}
+                  title="Remove"
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "#9CA3AF", padding: 0, display: "flex", lineHeight: 1, flexShrink: 0 }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = "#EF4444")}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = "#9CA3AF")}
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Active embed */}
+      {activeSource && <YouTubeEmbed source={activeSource} />}
+      {activeSource && (
+        <p style={{ margin: 0, fontSize: "0.73rem", color: "#9CA3AF", fontFamily: "Inter, sans-serif" }}>
+          {activeSource.title}
         </p>
       )}
 
+      {/* Edit mode: add manually */}
       {editMode && (
-        editingUrl ? (
-          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-            <input value={urlInput} onChange={(e) => setUrlInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSave()} placeholder={cfg.url} style={{ ...INPUT_STYLE, flex: 1 }} />
-            <button onClick={handleSave} disabled={saving} style={BTN_PRIMARY}>{saving ? "…" : "Update"}</button>
-            <button onClick={() => { setEditingUrl(false); setUrlInput(""); }} style={BTN_GHOST}>Cancel</button>
-          </div>
-        ) : (
-          <button onClick={() => { setUrlInput(cfg.url ?? ""); setEditingUrl(true); }} style={{ alignSelf: "flex-start", background: "none", border: "none", fontSize: "0.8rem", color: "#0D9488", cursor: "pointer", padding: 0, fontFamily: "Inter, sans-serif", textDecoration: "underline" }}>
-            Change URL
+        addingManual ? ManualAddForm : (
+          <button
+            onClick={() => setAddingManual(true)}
+            style={{ alignSelf: "flex-start", ...BTN_GHOST, borderStyle: "dashed", padding: "5px 12px", color: "#9CA3AF", fontSize: "0.78rem" }}
+          >
+            + Add manually
           </button>
         )
       )}
@@ -894,6 +972,19 @@ export default function LearningHub() {
         .eq("clerk_id", user.id)
         .order("position", { ascending: true });
       const list = (data ?? []) as HubWidget[];
+
+      // Migrate old single-URL YouTube config → sources array
+      for (const w of list) {
+        const cfg = w.config as YouTubeConfig;
+        if (w.type === "youtube" && cfg.url && !cfg.sources) {
+          const migrated: YouTubeConfig = {
+            sources: [{ id: crypto.randomUUID(), title: "My Video", url: cfg.url }],
+          };
+          await (supabase as any).from("hub_widgets").update({ config: migrated }).eq("id", w.id);
+          w.config = migrated as Record<string, unknown>;
+        }
+      }
+
       setWidgets(list);
       setPendingOrder(list);
       setLoading(false);
@@ -1120,6 +1211,8 @@ export default function LearningHub() {
             .hub-grid { grid-template-columns: 1fr !important; }
             .hub-grid > * { grid-column: 1 / -1 !important; }
           }
+          .yt-tabs::-webkit-scrollbar { display: none; }
+          .yt-tabs { -ms-overflow-style: none; scrollbar-width: none; }
         `}</style>
       </main>
 
