@@ -5,6 +5,7 @@ import { useUser } from "@clerk/clerk-react";
 import { toast } from "sonner";
 import { Nav } from "@/components/Nav";
 import { supabase } from "@/integrations/supabase/client";
+import { useSupabaseClient } from "@/lib/supabaseClient";
 
 const getYouTubeInfo = (url: string) => {
   try {
@@ -134,6 +135,7 @@ const ResourceProfile = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, isSignedIn } = useUser();
+  const hubSupabase = useSupabaseClient();
 
   // ── Existing state ────────────────────────────────────────────────────────
   const [resource, setResource] = useState<ResourceData | null>(null);
@@ -560,6 +562,44 @@ const ResourceProfile = () => {
   const hasSeries = playlistVideos.length > 0;
   const showSidebar = hasSeries && !playlistLoading;
 
+  const handleAddSeriesToHub = async () => {
+    if (!user || !resource) return;
+    const { data: existing } = await (hubSupabase as any)
+      .from("hub_widgets")
+      .select("id")
+      .eq("clerk_id", user.id)
+      .eq("type", "youtube")
+      .maybeSingle();
+    if (existing) {
+      toast("You already have a YouTube widget in your Learning Hub. Update it from the hub directly.");
+      return;
+    }
+    const { data: allWidgets } = await (hubSupabase as any)
+      .from("hub_widgets")
+      .select("position")
+      .eq("clerk_id", user.id)
+      .order("position", { ascending: false })
+      .limit(1);
+    const maxPosition = (allWidgets?.[0]?.position ?? -1) as number;
+    const { error } = await (hubSupabase as any)
+      .from("hub_widgets")
+      .insert({
+        clerk_id: user.id,
+        type: "youtube",
+        title: resource.resource_name ?? "YouTube",
+        position: maxPosition + 1,
+        config: { url: resource.url },
+        size: "full",
+      });
+    if (error) {
+      toast.error("Couldn't add to hub. Please try again.");
+      return;
+    }
+    toast.success("Added to your Learning Hub! Visit the hub to watch.", {
+      action: { label: "Go to Hub", onClick: () => navigate("/hub") },
+    });
+  };
+
   // ── Shared JSX ────────────────────────────────────────────────────────────
   const aboutCard = (
     <div style={{ background: "white", border: "1px solid #E5E7EB", borderRadius: 12, padding: 24, marginBottom: 16 }}>
@@ -858,7 +898,7 @@ const ResourceProfile = () => {
                           <button onClick={handleAddSeriesToCurriculum} style={{ background: "white", border: "1.5px solid #0D9488", color: "#0D9488", borderRadius: 8, padding: "10px", fontSize: "0.875rem", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 6, width: "100%", justifyContent: "center", cursor: "pointer" }}>
                             <BookPlus className="h-4 w-4" />Add Series to Study Curriculum
                           </button>
-                          <button onClick={() => toast("Learning Hub coming soon — finish setting up your hub first!")} style={{ background: "white", border: "1.5px solid #0D9488", color: "#0D9488", borderRadius: 8, padding: "10px", fontSize: "0.875rem", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 6, width: "100%", justifyContent: "center", cursor: "pointer" }}>
+                          <button onClick={handleAddSeriesToHub} style={{ background: "white", border: "1.5px solid #0D9488", color: "#0D9488", borderRadius: 8, padding: "10px", fontSize: "0.875rem", fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 6, width: "100%", justifyContent: "center", cursor: "pointer" }}>
                             <BookPlus className="h-4 w-4" />Add Series to Learning Hub
                           </button>
                         </>

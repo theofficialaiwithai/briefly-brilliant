@@ -31,6 +31,7 @@ export function WidgetCard({ widget, editMode, dragHandleProps, onDelete, onResi
         borderRadius: 12,
         boxShadow: "0 2px 20px rgba(0,0,0,0.06)",
         minHeight: 200,
+        height: "100%",
         display: "flex",
         flexDirection: "column",
       }}
@@ -140,7 +141,7 @@ export function WidgetCard({ widget, editMode, dragHandleProps, onDelete, onResi
       </div>
 
       {/* Content */}
-      <div style={{ padding: 16, flex: 1, display: "flex", flexDirection: "column" }}>
+      <div style={{ padding: 16, flex: 1, display: "flex", flexDirection: "column", overflowY: "auto" }}>
         {confirming ? (
           <div
             style={{

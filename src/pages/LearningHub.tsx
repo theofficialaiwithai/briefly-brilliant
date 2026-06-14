@@ -56,7 +56,27 @@ type ScoreConfig = { scores?: ScoreEntry[] };
 type NotesConfig = { content?: string };
 type LinkItem = { id: string; title: string; url: string; type: "pdf" | "link" };
 type PdfLinkConfig = { links?: LinkItem[] };
-type CountdownConfig = { testDate?: string; testName?: string };
+type CountdownType = "test_date" | "application_deadline" | "registration_deadline" | "study_goal";
+type CountdownConfig = { testDate?: string; testName?: string; countdownType?: CountdownType };
+
+const COUNTDOWN_TYPES: { value: CountdownType; label: string }[] = [
+  { value: "test_date", label: "LSAT Test Date" },
+  { value: "application_deadline", label: "Application Deadline" },
+  { value: "registration_deadline", label: "Registration Deadline" },
+  { value: "study_goal", label: "Study Goal" },
+];
+const COUNTDOWN_LABELS: Record<CountdownType, string> = {
+  test_date: "days until your LSAT",
+  application_deadline: "days until application deadline",
+  registration_deadline: "days until registration closes",
+  study_goal: "days until study goal",
+};
+const COUNTDOWN_PLACEHOLDERS: Record<CountdownType, string> = {
+  test_date: "e.g. LSAT June 2025",
+  application_deadline: "e.g. Harvard Law Application",
+  registration_deadline: "e.g. August LSAT Registration",
+  study_goal: "e.g. Finish LG Fundamentals",
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -711,17 +731,20 @@ function CountdownWidgetContent({ widget, editMode, onConfigUpdate }: ContentPro
   const [changingDate, setChangingDate] = useState(false);
   const [dateInput, setDateInput] = useState(cfg.testDate ?? "");
   const [nameInput, setNameInput] = useState(cfg.testName ?? "");
+  const [countdownType, setCountdownType] = useState<CountdownType>(cfg.countdownType ?? "test_date");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setDateInput((widget.config as CountdownConfig).testDate ?? "");
-    setNameInput((widget.config as CountdownConfig).testName ?? "");
+    const c = widget.config as CountdownConfig;
+    setDateInput(c.testDate ?? "");
+    setNameInput(c.testName ?? "");
+    setCountdownType(c.countdownType ?? "test_date");
   }, [widget.config]);
 
   const handleSave = async () => {
     if (!dateInput) return;
     setSaving(true);
-    await onConfigUpdate({ testDate: dateInput, testName: nameInput.trim() || undefined });
+    await onConfigUpdate({ testDate: dateInput, testName: nameInput.trim() || undefined, countdownType });
     setSaving(false);
     setChangingDate(false);
   };
@@ -742,7 +765,7 @@ function CountdownWidgetContent({ widget, editMode, onConfigUpdate }: ContentPro
 
   if (!cfg.testDate || changingDate) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, minHeight: 140 }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, minHeight: 160 }}>
         {!changingDate && (
           <>
             <Timer size={32} color="#9CA3AF" />
@@ -752,15 +775,49 @@ function CountdownWidgetContent({ widget, editMode, onConfigUpdate }: ContentPro
           </>
         )}
         {(editMode || !cfg.testDate) && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%", maxWidth: 240 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%", maxWidth: 280 }}>
+            {editMode && (
+              <>
+                <p style={{ margin: 0, fontSize: "0.78rem", color: "#6B7280", fontFamily: "Inter, sans-serif", textAlign: "center" }}>
+                  What are you counting down to?
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4, justifyContent: "center" }}>
+                  {COUNTDOWN_TYPES.map(({ value, label }) => (
+                    <button
+                      key={value}
+                      onClick={() => setCountdownType(value)}
+                      style={{
+                        padding: "4px 10px",
+                        fontSize: "0.75rem",
+                        borderRadius: 4,
+                        cursor: "pointer",
+                        fontFamily: "Inter, sans-serif",
+                        fontWeight: countdownType === value ? 600 : 400,
+                        border: countdownType === value ? "none" : "1px solid #E5E7EB",
+                        background: countdownType === value ? "#0D9488" : "#F3F4F6",
+                        color: countdownType === value ? "white" : "#6B7280",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
             <input type="date" value={dateInput} onChange={(e) => setDateInput(e.target.value)} style={INPUT_STYLE} />
-            <input value={nameInput} onChange={(e) => setNameInput(e.target.value)} placeholder="Test name (optional)" style={INPUT_STYLE} />
+            <input
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              placeholder={COUNTDOWN_PLACEHOLDERS[countdownType]}
+              style={INPUT_STYLE}
+            />
             <div style={{ display: "flex", gap: 6 }}>
               <button onClick={handleSave} disabled={!dateInput || saving} style={{ ...BTN_PRIMARY, flex: 1, opacity: !dateInput ? 0.5 : 1 }}>
                 {saving ? "Saving…" : "Set Date"}
               </button>
               {changingDate && (
-                <button onClick={() => { setChangingDate(false); setDateInput(cfg.testDate ?? ""); setNameInput(cfg.testName ?? ""); }} style={BTN_GHOST}>
+                <button onClick={() => { setChangingDate(false); setDateInput(cfg.testDate ?? ""); setNameInput(cfg.testName ?? ""); setCountdownType(cfg.countdownType ?? "test_date"); }} style={BTN_GHOST}>
                   Cancel
                 </button>
               )}
@@ -772,15 +829,16 @@ function CountdownWidgetContent({ widget, editMode, onConfigUpdate }: ContentPro
   }
 
   const daysUntil = getDaysUntil(cfg.testDate);
+  const activeType = cfg.countdownType ?? "test_date";
 
   if (daysUntil < 0) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, minHeight: 140, textAlign: "center" }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, minHeight: 160, textAlign: "center" }}>
         <p style={{ fontSize: "1.4rem", margin: 0 }}>🎉</p>
         <p style={{ fontSize: "1rem", fontWeight: 600, color: "#1A1A2E", margin: 0, fontFamily: "Inter, sans-serif" }}>Test day has passed!</p>
         {cfg.testName && <p style={{ fontSize: "0.85rem", color: "#6B7280", margin: 0, fontFamily: "Inter, sans-serif" }}>{cfg.testName}</p>}
         {editMode && (
-          <button onClick={() => { setDateInput(""); setNameInput(cfg.testName ?? ""); setChangingDate(true); }} style={{ ...BTN_GHOST, borderColor: "#0D9488", color: "#0D9488", marginTop: 4 }}>
+          <button onClick={() => { setDateInput(""); setNameInput(cfg.testName ?? ""); setCountdownType(activeType); setChangingDate(true); }} style={{ ...BTN_GHOST, borderColor: "#0D9488", color: "#0D9488", marginTop: 4 }}>
             Set new date
           </button>
         )}
@@ -789,15 +847,15 @@ function CountdownWidgetContent({ widget, editMode, onConfigUpdate }: ContentPro
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, minHeight: 140, textAlign: "center" }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, minHeight: 160, textAlign: "center" }}>
       <span style={{ fontFamily: "Playfair Display, serif", fontSize: "3rem", fontWeight: 700, color: "#0D9488", lineHeight: 1 }}>
         {daysUntil}
       </span>
-      <span style={{ fontSize: "0.875rem", color: "#6B7280", fontFamily: "Inter, sans-serif" }}>days until</span>
+      <span style={{ fontSize: "0.875rem", color: "#6B7280", fontFamily: "Inter, sans-serif" }}>{COUNTDOWN_LABELS[activeType]}</span>
       <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "#1A1A2E", fontFamily: "Inter, sans-serif" }}>{formatDate(cfg.testDate)}</span>
       {cfg.testName && <span style={{ fontSize: "0.8rem", color: "#9CA3AF", fontFamily: "Inter, sans-serif" }}>{cfg.testName}</span>}
       {editMode && (
-        <button onClick={() => { setDateInput(cfg.testDate ?? ""); setNameInput(cfg.testName ?? ""); setChangingDate(true); }} style={{ marginTop: 8, background: "none", border: "none", fontSize: "0.8rem", color: "#0D9488", cursor: "pointer", fontFamily: "Inter, sans-serif", textDecoration: "underline" }}>
+        <button onClick={() => { setDateInput(cfg.testDate ?? ""); setNameInput(cfg.testName ?? ""); setCountdownType(activeType); setChangingDate(true); }} style={{ marginTop: 8, background: "none", border: "none", fontSize: "0.8rem", color: "#0D9488", cursor: "pointer", fontFamily: "Inter, sans-serif", textDecoration: "underline" }}>
           Change date
         </button>
       )}
@@ -1029,7 +1087,7 @@ export default function LearningHub() {
 
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
           <SortableContext items={displayWidgets.map((w) => w.id)} strategy={rectSortingStrategy}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gap: 20 }} className="hub-grid">
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gap: 20, alignItems: "stretch" }} className="hub-grid">
               {displayWidgets.map((widget) => (
                 <SortableWidget
                   key={widget.id}
