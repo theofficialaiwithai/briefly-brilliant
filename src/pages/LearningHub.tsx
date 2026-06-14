@@ -18,7 +18,7 @@ import { Nav } from "@/components/Nav";
 import { useSupabaseClient } from "@/lib/supabaseClient";
 import { SortableWidget } from "@/components/hub/SortableWidget";
 import { AddWidgetModal } from "@/components/hub/AddWidgetModal";
-import type { HubWidget, WidgetType } from "@/components/hub/types";
+import type { HubWidget, WidgetSize, WidgetType } from "@/components/hub/types";
 
 export default function LearningHub() {
   const { user, isSignedIn, isLoaded } = useUser();
@@ -79,11 +79,9 @@ export default function LearningHub() {
     setEditMode(false);
   };
 
-  const handleResize = (id: string) => {
+  const handleResize = (id: string, size: WidgetSize) => {
     setPendingOrder((items) =>
-      items.map((w) =>
-        w.id === id ? { ...w, size: w.size === "full" ? "half" : "full" } as typeof w : w
-      )
+      items.map((w) => (w.id === id ? { ...w, size } : w))
     );
   };
 
@@ -104,12 +102,19 @@ export default function LearningHub() {
     setPendingOrder((prev) => prev.filter((w) => w.id !== id));
   };
 
-  const FULL_BY_DEFAULT: WidgetType[] = ["youtube", "curriculum", "score_tracker"];
+  const DEFAULT_SIZES: Record<WidgetType, WidgetSize> = {
+    youtube: "full",
+    curriculum: "two-thirds",
+    score_tracker: "two-thirds",
+    notes: "half",
+    pdf_link: "half",
+    countdown: "third",
+  };
 
   const handleAddWidget = async (type: WidgetType, title: string) => {
     if (!user) return;
     const position = widgets.length;
-    const size = FULL_BY_DEFAULT.includes(type) ? "full" : "half";
+    const size = DEFAULT_SIZES[type];
     const { data } = await (supabase as any)
       .from("hub_widgets")
       .insert({ clerk_id: user.id, type, title, position, size, config: {} })
@@ -331,7 +336,7 @@ export default function LearningHub() {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(2, 1fr)",
+                gridTemplateColumns: "repeat(12, 1fr)",
                 gap: 20,
               }}
               className="hub-grid"
@@ -346,14 +351,15 @@ export default function LearningHub() {
                 />
               ))}
 
-              {/* Add Widget card — only in edit mode */}
+              {/* Add Widget card — only in edit mode, always full width */}
               {editMode && (
                 <button
                   onClick={() => setAddModalOpen(true)}
                   style={{
+                    gridColumn: "1 / -1",
                     border: "2px dashed #E5E7EB",
                     borderRadius: 12,
-                    minHeight: 200,
+                    minHeight: 80,
                     background: "none",
                     cursor: "pointer",
                     display: "flex",
@@ -389,8 +395,9 @@ export default function LearningHub() {
         </DndContext>
 
         <style>{`
-          @media (max-width: 640px) {
+          @media (max-width: 767px) {
             .hub-grid { grid-template-columns: 1fr !important; }
+            .hub-grid > * { grid-column: 1 / -1 !important; }
           }
         `}</style>
       </main>

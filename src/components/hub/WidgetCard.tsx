@@ -1,13 +1,22 @@
 import { useState } from "react";
-import { Columns2, GripVertical, Square, X } from "lucide-react";
-import type { HubWidget } from "./types";
+import { GripVertical, X } from "lucide-react";
+import type { HubWidget, WidgetSize } from "./types";
+
+const SIZE_PILLS: { size: WidgetSize; label: string }[] = [
+  { size: "quarter", label: "¼" },
+  { size: "third", label: "⅓" },
+  { size: "half", label: "½" },
+  { size: "two-thirds", label: "⅔" },
+  { size: "three-quarters", label: "¾" },
+  { size: "full", label: "↔" },
+];
 
 type Props = {
   widget: HubWidget;
   editMode: boolean;
   dragHandleProps?: React.HTMLAttributes<HTMLButtonElement>;
   onDelete: (id: string) => void;
-  onResize: () => void;
+  onResize: (size: WidgetSize) => void;
 };
 
 export function WidgetCard({ widget, editMode, dragHandleProps, onDelete, onResize }: Props) {
@@ -28,11 +37,12 @@ export function WidgetCard({ widget, editMode, dragHandleProps, onDelete, onResi
       {/* Header */}
       <div
         style={{
-          padding: "14px 16px",
+          padding: "10px 12px",
           borderBottom: "1px solid #E5E7EB",
           display: "flex",
           alignItems: "center",
-          gap: 8,
+          gap: 6,
+          minWidth: 0,
         }}
       >
         {editMode && (
@@ -53,6 +63,7 @@ export function WidgetCard({ widget, editMode, dragHandleProps, onDelete, onResi
             <GripVertical size={16} />
           </button>
         )}
+
         <span
           style={{
             fontWeight: 600,
@@ -60,28 +71,50 @@ export function WidgetCard({ widget, editMode, dragHandleProps, onDelete, onResi
             color: "#1A1A2E",
             flex: 1,
             fontFamily: "Inter, sans-serif",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            minWidth: 0,
           }}
         >
           {widget.title}
         </span>
+
+        {/* Size pills — only in edit mode */}
         {editMode && (
-          <button
-            onClick={onResize}
-            title={widget.size === "full" ? "Shrink to half width" : "Expand to full width"}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              color: "#9CA3AF",
-              padding: 2,
-              display: "flex",
-              flexShrink: 0,
-            }}
-            aria-label={widget.size === "full" ? "Shrink to half width" : "Expand to full width"}
-          >
-            {widget.size === "full" ? <Square size={16} /> : <Columns2 size={16} />}
-          </button>
+          <div style={{ display: "flex", gap: 2, flexShrink: 0 }}>
+            {SIZE_PILLS.map(({ size, label }) => {
+              const active = widget.size === size;
+              return (
+                <button
+                  key={size}
+                  onClick={() => onResize(size)}
+                  title={size.replace("-", " ")}
+                  style={{
+                    width: 28,
+                    height: 22,
+                    borderRadius: 4,
+                    fontSize: "0.7rem",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    border: active ? "none" : "1px solid #E5E7EB",
+                    background: active ? "#0D9488" : "#F3F4F6",
+                    color: active ? "white" : "#6B7280",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: 0,
+                    fontFamily: "Inter, sans-serif",
+                    transition: "background 0.1s, color 0.1s",
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
         )}
+
         {editMode && (
           <button
             onClick={() => setConfirming(true)}
@@ -94,6 +127,7 @@ export function WidgetCard({ widget, editMode, dragHandleProps, onDelete, onResi
               color: "#9CA3AF",
               padding: 2,
               display: "flex",
+              flexShrink: 0,
               transition: "color 0.15s",
             }}
             aria-label="Delete widget"
@@ -101,6 +135,7 @@ export function WidgetCard({ widget, editMode, dragHandleProps, onDelete, onResi
             <X size={16} />
           </button>
         )}
+
       </div>
 
       {/* Content */}
