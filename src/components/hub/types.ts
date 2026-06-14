@@ -12,6 +12,7 @@ export type HubWidget = {
   type: WidgetType;
   title: string;
   position: number;
+  size: "half" | "full";
   config: Record<string, unknown>;
   created_at: string;
   updated_at: string;

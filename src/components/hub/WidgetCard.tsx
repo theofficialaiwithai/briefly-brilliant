@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { GripVertical, X } from "lucide-react";
+import { Columns2, GripVertical, Square, X } from "lucide-react";
 import type { HubWidget } from "./types";
 
 type Props = {
@@ -7,9 +7,10 @@ type Props = {
   editMode: boolean;
   dragHandleProps?: React.HTMLAttributes<HTMLButtonElement>;
   onDelete: (id: string) => void;
+  onResize: () => void;
 };
 
-export function WidgetCard({ widget, editMode, dragHandleProps, onDelete }: Props) {
+export function WidgetCard({ widget, editMode, dragHandleProps, onDelete, onResize }: Props) {
   const [confirming, setConfirming] = useState(false);
 
   return (
@@ -63,6 +64,24 @@ export function WidgetCard({ widget, editMode, dragHandleProps, onDelete }: Prop
         >
           {widget.title}
         </span>
+        {editMode && (
+          <button
+            onClick={onResize}
+            title={widget.size === "full" ? "Shrink to half width" : "Expand to full width"}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "#9CA3AF",
+              padding: 2,
+              display: "flex",
+              flexShrink: 0,
+            }}
+            aria-label={widget.size === "full" ? "Shrink to half width" : "Expand to full width"}
+          >
+            {widget.size === "full" ? <Square size={16} /> : <Columns2 size={16} />}
+          </button>
+        )}
         {editMode && (
           <button
             onClick={() => setConfirming(true)}

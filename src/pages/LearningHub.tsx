@@ -65,7 +65,7 @@ export default function LearningHub() {
     for (const w of updated) {
       await (supabase as any)
         .from("hub_widgets")
-        .update({ position: w.position })
+        .update({ position: w.position, size: w.size })
         .eq("id", w.id);
     }
     setWidgets(updated);
@@ -77,6 +77,14 @@ export default function LearningHub() {
   const handleCancel = () => {
     setPendingOrder([...widgets]);
     setEditMode(false);
+  };
+
+  const handleResize = (id: string) => {
+    setPendingOrder((items) =>
+      items.map((w) =>
+        w.id === id ? { ...w, size: w.size === "full" ? "half" : "full" } as typeof w : w
+      )
+    );
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -96,12 +104,15 @@ export default function LearningHub() {
     setPendingOrder((prev) => prev.filter((w) => w.id !== id));
   };
 
+  const FULL_BY_DEFAULT: WidgetType[] = ["youtube", "curriculum", "score_tracker"];
+
   const handleAddWidget = async (type: WidgetType, title: string) => {
     if (!user) return;
     const position = widgets.length;
+    const size = FULL_BY_DEFAULT.includes(type) ? "full" : "half";
     const { data } = await (supabase as any)
       .from("hub_widgets")
-      .insert({ clerk_id: user.id, type, title, position, config: {} })
+      .insert({ clerk_id: user.id, type, title, position, size, config: {} })
       .select()
       .single();
     if (data) {
@@ -331,6 +342,7 @@ export default function LearningHub() {
                   widget={widget}
                   editMode={editMode}
                   onDelete={handleDelete}
+                  onResize={handleResize}
                 />
               ))}
 

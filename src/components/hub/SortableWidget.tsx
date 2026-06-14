@@ -7,9 +7,10 @@ type Props = {
   widget: HubWidget;
   editMode: boolean;
   onDelete: (id: string) => void;
+  onResize: (id: string) => void;
 };
 
-export function SortableWidget({ widget, editMode, onDelete }: Props) {
+export function SortableWidget({ widget, editMode, onDelete, onResize }: Props) {
   const {
     attributes,
     listeners,
@@ -25,6 +26,7 @@ export function SortableWidget({ widget, editMode, onDelete }: Props) {
     opacity: isDragging ? 0.4 : 1,
     position: "relative",
     zIndex: isDragging ? 10 : undefined,
+    gridColumn: widget.size === "full" ? "span 2" : "span 1",
   };
 
   return (
@@ -34,6 +36,7 @@ export function SortableWidget({ widget, editMode, onDelete }: Props) {
         editMode={editMode}
         dragHandleProps={{ ...attributes, ...listeners } as React.HTMLAttributes<HTMLButtonElement>}
         onDelete={onDelete}
+        onResize={() => onResize(widget.id)}
       />
     </div>
   );
