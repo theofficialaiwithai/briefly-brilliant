@@ -173,6 +173,7 @@ const ResourceProfile = () => {
   useEffect(() => { autoAdvanceRef.current = autoAdvance; }, [autoAdvance]);
   useEffect(() => { playlistLenRef.current = playlistVideos.length; }, [playlistVideos.length]);
 
+
   // ── Fetch resource ────────────────────────────────────────────────────────
   useEffect(() => {
     if (!id) return;
@@ -643,7 +644,7 @@ const ResourceProfile = () => {
 
       {/* Sticky subheader */}
       <div className="sticky top-0 z-10 border-b bg-white" style={{ borderColor: "#E5E7EB" }}>
-        <div style={{ maxWidth: isYouTube ? 1200 : 896, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 52 }}>
+        <div style={{ maxWidth: isYouTube ? 1152 : 896, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: 52 }}>
           <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-sm transition-colors hover:text-[#1A1A2E]" style={{ color: "#6B7280" }}>
             <ArrowLeft className="h-4 w-4" />
             Back
@@ -659,31 +660,31 @@ const ResourceProfile = () => {
 
       {isYouTube ? (
         /* ── YOUTUBE LAYOUT ───────────────────────────────────────────────── */
-        <main style={{ maxWidth: 1200, margin: "0 auto", padding: "24px 24px 96px" }}>
+        <main style={{ maxWidth: 1152, margin: "0 auto", padding: "40px 24px 96px" }}>
           <style>{`
             @media (max-width: 767px) {
-              .yt-top { flex-direction: column !important; }
+              .yt-top { grid-template-columns: 1fr !important; }
               .yt-player-box { border-radius: 12px !important; }
-              .yt-sidebar-box { width: 100% !important; border-left: 1px solid #E5E7EB !important; border-radius: 12px !important; align-self: auto !important; max-height: 280px !important; }
+              .yt-sidebar-box { border-left: 1px solid #E5E7EB !important; border-radius: 12px !important; max-height: 280px !important; }
               .yt-bottom-cols { flex-direction: column !important; }
               .yt-right-col { width: 100% !important; }
             }
           `}</style>
 
-          {/* TOP: player + sidebar */}
-          <div className="yt-top" style={{ display: "flex", alignItems: "flex-start", marginBottom: 16 }}>
+          {/* TOP: player + sidebar — CSS Grid so sidebar height is bounded by the player height */}
+          <div className="yt-top" style={{ display: "grid", gridTemplateColumns: showSidebar ? "1fr 340px" : "1fr", marginBottom: 16 }}>
 
-            {/* Player column */}
-            <div style={{ flex: 1, minWidth: 0 }}>
+            {/* Player column — align-self: start so IT sets the grid row height */}
+            <div style={{ alignSelf: "start" }}>
 
               {/* Loading skeleton */}
               {playlistLoading && (
-                <div className="animate-pulse yt-player-box" style={{ aspectRatio: "16/9", borderRadius: 12, backgroundColor: "#E5E7EB" }} />
+                <div className="animate-pulse yt-player-box" style={{ position: "relative", paddingBottom: "56.25%", borderRadius: showSidebar ? "12px 0 0 12px" : "12px", backgroundColor: "#E5E7EB" }} />
               )}
 
               {/* Series player (YT IFrame API) */}
               {!playlistLoading && hasSeries && currentVideo && (
-                <div className="yt-player-box" style={{ position: "relative", aspectRatio: "16/9", borderRadius: showSidebar ? "12px 0 0 12px" : "12px", overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.08)" }}>
+                <div className="yt-player-box" style={{ position: "relative", paddingBottom: "56.25%", borderRadius: showSidebar ? "12px 0 0 12px" : "12px", overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.08)" }}>
                   <div id={playerIdRef.current} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} />
                   {countdown !== null && (
                     <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.72)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14, zIndex: 10 }}>
@@ -696,32 +697,34 @@ const ResourceProfile = () => {
 
               {/* Playlist fallback (API failed) */}
               {!playlistLoading && !hasSeries && isPlaylist && ytPlaylistId && (
-                <div className="yt-player-box" style={{ position: "relative", aspectRatio: "16/9", borderRadius: 12, overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.08)" }}>
+                <div className="yt-player-box" style={{ position: "relative", paddingBottom: "56.25%", borderRadius: 12, overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.08)" }}>
                   <iframe src={`https://www.youtube.com/embed/videoseries?list=${ytPlaylistId}`} title={resource.resource_name ?? ""} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }} />
                 </div>
               )}
 
               {/* Channel fallback (API failed) */}
               {!playlistLoading && !hasSeries && isChannel && (
-                <div className="yt-player-box" style={{ aspectRatio: "16/9", borderRadius: 12, background: "white", border: "1px solid #E5E7EB", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
-                  <p style={{ fontSize: "0.9rem", color: "#4B5563", margin: 0 }}>Visit this YouTube channel to watch the video series.</p>
-                  <a href={resource.url!} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#0D9488", color: "white", borderRadius: 8, padding: "10px 20px", fontSize: "0.875rem", fontWeight: 500, textDecoration: "none" }}>
-                    Visit Channel <ExternalLink size={14} />
-                  </a>
+                <div className="yt-player-box" style={{ position: "relative", paddingBottom: "56.25%" }}>
+                  <div style={{ position: "absolute", inset: 0, borderRadius: 12, background: "white", border: "1px solid #E5E7EB", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12 }}>
+                    <p style={{ fontSize: "0.9rem", color: "#4B5563", margin: 0 }}>Visit this YouTube channel to watch the video series.</p>
+                    <a href={resource.url!} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#0D9488", color: "white", borderRadius: 8, padding: "10px 20px", fontSize: "0.875rem", fontWeight: 500, textDecoration: "none" }}>
+                      Visit Channel <ExternalLink size={14} />
+                    </a>
+                  </div>
                 </div>
               )}
 
               {/* Single video embed */}
               {!isPlaylist && !isChannel && ytVideoId && (
-                <div className="yt-player-box" style={{ position: "relative", aspectRatio: "16/9", borderRadius: 12, overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.08)" }}>
+                <div className="yt-player-box" style={{ position: "relative", paddingBottom: "56.25%", borderRadius: 12, overflow: "hidden", boxShadow: "0 2px 20px rgba(0,0,0,0.08)" }}>
                   <iframe src={`https://www.youtube.com/embed/${ytVideoId}`} title={resource.resource_name ?? ""} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }} />
                 </div>
               )}
             </div>
 
-            {/* Playlist sidebar (series only, after load) */}
+            {/* Playlist sidebar — maxHeight computed to match player's 16:9 height within the grid */}
             {showSidebar && (
-              <div className="yt-sidebar-box" style={{ width: 340, flexShrink: 0, alignSelf: "stretch", background: "white", border: "1px solid #E5E7EB", borderLeft: "none", borderRadius: "0 12px 12px 0", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+              <div className="yt-sidebar-box" style={{ background: "white", border: "1px solid #E5E7EB", borderLeft: "none", borderRadius: "0 12px 12px 0", display: "flex", flexDirection: "column", overflow: "hidden", maxHeight: "calc((min(100vw, 1152px) - 48px - 340px) * 9 / 16)" }}>
                 <div style={{ padding: "14px 16px", borderBottom: "1px solid #E5E7EB", flexShrink: 0 }}>
                   <span style={{ fontWeight: 600, fontSize: "0.9rem", color: "#1A1A2E" }}>Up next</span>
                 </div>
