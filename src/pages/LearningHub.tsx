@@ -7,6 +7,8 @@ import {
   GripVertical,
   Link as LinkIcon,
   ListChecks,
+  ListVideo,
+  Loader2,
   Pencil,
   Plus,
   Timer,
@@ -14,6 +16,7 @@ import {
   X,
   Youtube,
 } from "lucide-react";
+import { getYouTubeInfo, fetchChannelUploads } from "@/lib/youtube";
 import {
   DndContext,
   DragEndEvent,
@@ -82,26 +85,6 @@ const COUNTDOWN_PLACEHOLDERS: Record<CountdownType, string> = {
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
-
-function parseYTUrl(url: string): { type: "video" | "playlist" | "channel"; id: string } | null {
-  try {
-    const u = new URL(url);
-    if (!u.hostname.includes("youtube.com") && !u.hostname.includes("youtu.be")) return null;
-    const playlistId = u.searchParams.get("list");
-    const videoId = u.hostname.includes("youtu.be")
-      ? u.pathname.slice(1).split("?")[0]
-      : u.searchParams.get("v");
-    if (playlistId) return { type: "playlist", id: playlistId };
-    if (videoId) return { type: "video", id: videoId };
-    const p = u.pathname;
-    if (p.startsWith("/@") || p.includes("/channel/") || p.includes("/c/") || p.includes("/user/")) {
-      return { type: "channel", id: url };
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
 
 const INPUT_STYLE: React.CSSProperties = {
   border: "1px solid #E5E7EB",
@@ -264,35 +247,7 @@ type ContentProps = {
 
 // ── YouTube ──────────────────────────────────────────────────────────────────
 
-function YouTubeEmbed({ source }: { source: YouTubeSource }) {
-  const parsed = parseYTUrl(source.url);
-  if (parsed?.type === "video") {
-    return (
-      <iframe src={`https://www.youtube.com/embed/${parsed.id}`} title={source.title}
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen style={{ width: "100%", aspectRatio: "16/9", borderRadius: 8, border: "none", display: "block" }} />
-    );
-  }
-  if (parsed?.type === "playlist") {
-    return (
-      <iframe src={`https://www.youtube.com/embed/videoseries?list=${parsed.id}`} title={source.title}
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen style={{ width: "100%", aspectRatio: "16/9", borderRadius: 8, border: "none", display: "block" }} />
-    );
-  }
-  if (parsed?.type === "channel") {
-    return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, padding: 24, background: "#F9FAFB", borderRadius: 8, aspectRatio: "16/9", justifyContent: "center" }}>
-        <Youtube size={28} color="#FF0000" />
-        <p style={{ margin: 0, fontSize: "0.85rem", color: "#4B5563", fontFamily: "Inter, sans-serif", textAlign: "center" }}>Channels can't be embedded directly.</p>
-        <a href={source.url} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.8rem", color: "#0D9488", fontFamily: "Inter, sans-serif", textDecoration: "none" }}>
-          Open in YouTube <ExternalLink size={12} />
-        </a>
-      </div>
-    );
-  }
-  return <p style={{ fontSize: "0.85rem", color: "#EF4444", fontFamily: "Inter, sans-serif", margin: 0 }}>Invalid YouTube URL</p>;
-}
+type ChannelResolution = "loading" | "failed" | string; // string = resolved playlistId
 
 function YouTubeWidgetContent({ widget, editMode, onConfigUpdate }: ContentProps) {
   const cfg = widget.config as YouTubeConfig;
@@ -302,6 +257,13 @@ function YouTubeWidgetContent({ widget, editMode, onConfigUpdate }: ContentProps
   const [manualUrl, setManualUrl] = useState("");
   const [manualTitle, setManualTitle] = useState("");
   const [saving, setSaving] = useState(false);
+  const [channelResolutions, setChannelResolutions] = useState<Record<string, ChannelResolution>>({});
+
+  // Refs to avoid stale closures inside async callbacks
+  const sourcesRef = useRef(sources);
+  useEffect(() => { sourcesRef.current = sources; }, [sources]);
+  const onConfigUpdateRef = useRef(onConfigUpdate);
+  useEffect(() => { onConfigUpdateRef.current = onConfigUpdate; }, [onConfigUpdate]);
 
   // Clamp when sources shrink (e.g. after removal)
   useEffect(() => {
@@ -312,6 +274,54 @@ function YouTubeWidgetContent({ widget, editMode, onConfigUpdate }: ContentProps
 
   const clampedIdx = Math.min(activeIdx, Math.max(0, sources.length - 1));
   const activeSource = sources[clampedIdx] ?? null;
+
+  // Resolve channel URLs to their uploads playlist when they become active
+  useEffect(() => {
+    if (!activeSource) return;
+    const info = getYouTubeInfo(activeSource.url);
+    if (!info.isChannel) return;
+    if (channelResolutions[activeSource.id]) return; // already resolving or done
+
+    const srcId = activeSource.id;
+    const srcUrl = activeSource.url;
+    let cancelled = false;
+
+    setChannelResolutions((prev) => ({ ...prev, [srcId]: "loading" }));
+    fetchChannelUploads(srcUrl).then((result) => {
+      if (cancelled) return;
+      if (!result) {
+        setChannelResolutions((prev) => ({ ...prev, [srcId]: "failed" }));
+        return;
+      }
+      setChannelResolutions((prev) => ({ ...prev, [srcId]: result.playlistId }));
+      // Persist the resolved playlist URL so next load skips the API call
+      const resolvedUrl = `https://www.youtube.com/playlist?list=${result.playlistId}`;
+      const updated = sourcesRef.current.map((s) =>
+        s.id === srcId ? { ...s, url: resolvedUrl } : s
+      );
+      onConfigUpdateRef.current({ sources: updated });
+    });
+    return () => { cancelled = true; };
+  }, [activeSource?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const getEmbedInfo = (src: YouTubeSource): { type: "video" | "playlist" | "loading" | "failed" | "invalid"; id?: string; url?: string } => {
+    const info = getYouTubeInfo(src.url);
+    if (info.isChannel) {
+      const res = channelResolutions[src.id];
+      if (!res || res === "loading") return { type: "loading" };
+      if (res === "failed") return { type: "failed", url: src.url };
+      return { type: "playlist", id: res };
+    }
+    if (info.playlistId) return { type: "playlist", id: info.playlistId };
+    if (info.videoId) return { type: "video", id: info.videoId };
+    return { type: "invalid" };
+  };
+
+  const getThumbnailUrl = (src: YouTubeSource): string | null => {
+    const info = getYouTubeInfo(src.url);
+    if (info.videoId) return `https://img.youtube.com/vi/${info.videoId}/mqdefault.jpg`;
+    return null;
+  };
 
   const handleRemoveSource = async (srcId: string) => {
     const removedIdx = sources.findIndex((s) => s.id === srcId);
@@ -333,6 +343,38 @@ function YouTubeWidgetContent({ widget, editMode, onConfigUpdate }: ContentProps
     setManualUrl("");
     setManualTitle("");
     setAddingManual(false);
+  };
+
+  const iframeAllow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+  const iframeBaseStyle: React.CSSProperties = { width: "100%", aspectRatio: "16/9", borderRadius: 8, border: "none", display: "block" };
+
+  const renderEmbed = (src: YouTubeSource) => {
+    const info = getEmbedInfo(src);
+    if (info.type === "video") {
+      return <iframe src={`https://www.youtube.com/embed/${info.id}`} title={src.title} allow={iframeAllow} allowFullScreen style={iframeBaseStyle} />;
+    }
+    if (info.type === "playlist") {
+      return <iframe src={`https://www.youtube.com/embed/videoseries?list=${info.id}`} title={src.title} allow={iframeAllow} allowFullScreen style={iframeBaseStyle} />;
+    }
+    if (info.type === "loading") {
+      return (
+        <div style={{ ...iframeBaseStyle, background: "#F9FAFB", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Loader2 size={24} color="#9CA3AF" className="animate-spin" />
+        </div>
+      );
+    }
+    if (info.type === "failed") {
+      return (
+        <div style={{ ...iframeBaseStyle, background: "#F9FAFB", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10 }}>
+          <Youtube size={28} color="#FF0000" />
+          <p style={{ margin: 0, fontSize: "0.85rem", color: "#4B5563", fontFamily: "Inter, sans-serif", textAlign: "center" }}>Couldn't load this channel.</p>
+          <a href={info.url} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.8rem", color: "#0D9488", fontFamily: "Inter, sans-serif", textDecoration: "none" }}>
+            Open in YouTube <ExternalLink size={12} />
+          </a>
+        </div>
+      );
+    }
+    return <p style={{ fontSize: "0.85rem", color: "#EF4444", fontFamily: "Inter, sans-serif", margin: 0 }}>Invalid YouTube URL</p>;
   };
 
   const ManualAddForm = (
@@ -415,12 +457,86 @@ function YouTubeWidgetContent({ widget, editMode, onConfigUpdate }: ContentProps
       </div>
 
       {/* Active embed */}
-      {activeSource && <YouTubeEmbed source={activeSource} />}
-      {activeSource && (
-        <p style={{ margin: 0, fontSize: "0.73rem", color: "#9CA3AF", fontFamily: "Inter, sans-serif" }}>
-          {activeSource.title}
-        </p>
-      )}
+      {activeSource && renderEmbed(activeSource)}
+
+      {/* Library cards row */}
+      <div style={{ display: "flex", flexDirection: "row", gap: 10, overflowX: "auto", padding: "12px 0 4px", scrollbarWidth: "thin" }}>
+        {sources.map((src, idx) => {
+          const isActive = idx === clampedIdx;
+          const thumbUrl = getThumbnailUrl(src);
+          return (
+            <div
+              key={src.id}
+              onClick={() => setActiveIdx(idx)}
+              style={{
+                width: 180,
+                height: 110,
+                flexShrink: 0,
+                background: "white",
+                borderRadius: 8,
+                border: isActive ? "2px solid #0D9488" : "1px solid #E5E7EB",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+                cursor: "pointer",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+                transition: "border-color 0.1s",
+              }}
+              onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.borderColor = "#9CA3AF"; }}
+              onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.borderColor = "#E5E7EB"; }}
+            >
+              {/* Thumbnail (top 60%) */}
+              <div style={{ height: 66, background: thumbUrl ? "#000" : "#F3F4F6", position: "relative", flexShrink: 0, overflow: "hidden" }}>
+                {thumbUrl ? (
+                  <img src={thumbUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                ) : (
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+                    <ListVideo size={22} color="#0D9488" />
+                  </div>
+                )}
+                {isActive && (
+                  <span style={{
+                    position: "absolute", top: 4, left: 4,
+                    background: "#0D9488", color: "white",
+                    borderRadius: 4, fontSize: "0.58rem", fontWeight: 700,
+                    padding: "2px 5px", fontFamily: "Inter, sans-serif",
+                    letterSpacing: "0.04em", lineHeight: 1.4,
+                  }}>
+                    ▶ Playing
+                  </span>
+                )}
+                {editMode && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleRemoveSource(src.id); }}
+                    title="Remove"
+                    style={{
+                      position: "absolute", top: 4, right: 4,
+                      background: "rgba(0,0,0,0.55)", border: "none", borderRadius: "50%",
+                      width: 18, height: 18, display: "flex", alignItems: "center",
+                      justifyContent: "center", cursor: "pointer", color: "white", padding: 0,
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(239,68,68,0.85)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(0,0,0,0.55)")}
+                  >
+                    <X size={10} />
+                  </button>
+                )}
+              </div>
+              {/* Title (bottom 40%) */}
+              <div style={{ padding: "5px 7px", flex: 1, overflow: "hidden" }}>
+                <p style={{
+                  margin: 0, fontSize: "0.72rem", fontWeight: 600, color: "#1A1A2E",
+                  fontFamily: "Inter, sans-serif", lineHeight: 1.35,
+                  display: "-webkit-box", WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical" as const, overflow: "hidden",
+                }}>
+                  {src.title}
+                </p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
       {/* Edit mode: add manually */}
       {editMode && (
