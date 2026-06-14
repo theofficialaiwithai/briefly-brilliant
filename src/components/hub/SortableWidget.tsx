@@ -17,9 +17,10 @@ type Props = {
   editMode: boolean;
   onDelete: (id: string) => void;
   onResize: (id: string, size: WidgetSize) => void;
+  children?: React.ReactNode;
 };
 
-export function SortableWidget({ widget, editMode, onDelete, onResize }: Props) {
+export function SortableWidget({ widget, editMode, onDelete, onResize, children }: Props) {
   const {
     attributes,
     listeners,
@@ -46,7 +47,9 @@ export function SortableWidget({ widget, editMode, onDelete, onResize }: Props) 
         dragHandleProps={{ ...attributes, ...listeners } as React.HTMLAttributes<HTMLButtonElement>}
         onDelete={onDelete}
         onResize={(size) => onResize(widget.id, size)}
-      />
+      >
+        {children}
+      </WidgetCard>
     </div>
   );
 }

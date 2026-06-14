@@ -17,9 +17,10 @@ type Props = {
   dragHandleProps?: React.HTMLAttributes<HTMLButtonElement>;
   onDelete: (id: string) => void;
   onResize: (size: WidgetSize) => void;
+  children?: React.ReactNode;
 };
 
-export function WidgetCard({ widget, editMode, dragHandleProps, onDelete, onResize }: Props) {
+export function WidgetCard({ widget, editMode, dragHandleProps, onDelete, onResize, children }: Props) {
   const [confirming, setConfirming] = useState(false);
 
   return (
@@ -200,27 +201,29 @@ export function WidgetCard({ widget, editMode, dragHandleProps, onDelete, onResi
             </div>
           </div>
         ) : (
-          <div
-            style={{
-              background: "#F9FAFB",
-              borderRadius: 8,
-              flex: 1,
-              minHeight: 140,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <span
+          children ?? (
+            <div
               style={{
-                fontSize: "0.85rem",
-                color: "#9CA3AF",
-                fontFamily: "Inter, sans-serif",
+                background: "#F9FAFB",
+                borderRadius: 8,
+                flex: 1,
+                minHeight: 140,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              Widget content coming soon
-            </span>
-          </div>
+              <span
+                style={{
+                  fontSize: "0.85rem",
+                  color: "#9CA3AF",
+                  fontFamily: "Inter, sans-serif",
+                }}
+              >
+                Widget content coming soon
+              </span>
+            </div>
+          )
         )}
       </div>
     </div>
