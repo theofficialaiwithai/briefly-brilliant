@@ -1,12 +1,13 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { SignedIn, SignedOut, useUser, useClerk } from "@clerk/clerk-react";
-import { Settings, Bookmark, LayoutDashboard, LogOut } from "lucide-react";
+import { Settings, Bookmark, LayoutDashboard, LayoutGrid, LogOut } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Logo } from "@/components/Logo";
 import { cn } from "@/lib/utils";
 
 const SIGNED_IN_LINKS = [
   { label: "Feed", to: "/feed" },
+  { label: "Learning Hub", to: "/hub" },
   { label: "Study Groups", to: "/groups" },
   { label: "Dashboard", to: "/dashboard" },
   { label: "My Library", to: "/library" },
@@ -118,6 +119,7 @@ export const Nav = () => {
                   }}
                 >
                   <DropdownItem icon={<Settings size={14} />} label="Profile & Settings" onClick={() => go("/profile")} />
+                  <DropdownItem icon={<LayoutGrid size={14} />} label="Learning Hub" onClick={() => go("/hub")} />
                   <DropdownItem icon={<Bookmark size={14} />} label="My Library" onClick={() => go("/library")} />
                   <DropdownItem icon={<LayoutDashboard size={14} />} label="Dashboard" onClick={() => go("/dashboard")} />
                   <div style={{ height: 1, backgroundColor: "#E5E7EB", margin: "4px 0" }} />
