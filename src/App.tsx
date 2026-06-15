@@ -16,6 +16,7 @@ import Dashboard from "./pages/Dashboard.tsx";
 import Library from "./pages/Library.tsx";
 import Profile from "./pages/Profile.tsx";
 import LearningHub from "./pages/LearningHub.tsx";
+import Chat from "./pages/Chat.tsx";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
           <Route path="/library" element={<Library />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/hub" element={<LearningHub />} />
+          <Route path="/chat" element={<Chat />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

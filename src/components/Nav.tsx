@@ -10,6 +10,7 @@ const SIGNED_IN_LINKS = [
   { label: "Learning Hub", to: "/hub" },
   { label: "Study Groups", to: "/groups" },
   { label: "Dashboard", to: "/dashboard" },
+  { label: "Chat with Bri", to: "/chat" },
   { label: "My Library", to: "/library" },
 ];
 

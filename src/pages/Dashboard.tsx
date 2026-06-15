@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { useUser } from "@clerk/clerk-react";
 import { Nav } from "@/components/Nav";
@@ -22,6 +22,7 @@ const BADGE_STYLES: Record<string, React.CSSProperties> = {
 
 const Dashboard = () => {
   const { user, isSignedIn } = useUser();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<Stats>({ completed: 0, saved: 0, skipped: 0 });
   const [activity, setActivity] = useState<ActivityRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,6 +89,82 @@ const Dashboard = () => {
           </div>
         ) : (
           <>
+            {/* Chat with Bri card */}
+            <div
+              className="mb-8 rounded-2xl p-6"
+              style={{
+                background: "linear-gradient(135deg, #0D9488 0%, #0F766E 60%, #134E4A 100%)",
+                boxShadow: "0 4px 24px rgba(13,148,136,0.25)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                  <div
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: "50%",
+                      background: "rgba(255,255,255,0.2)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "1.2rem",
+                      fontWeight: 700,
+                      fontFamily: "'Playfair Display', serif",
+                      color: "white",
+                      flexShrink: 0,
+                    }}
+                  >
+                    B
+                  </div>
+                  <div>
+                    <h3
+                      style={{
+                        margin: 0,
+                        fontFamily: "'Playfair Display', serif",
+                        fontSize: "1.15rem",
+                        fontWeight: 700,
+                        color: "white",
+                      }}
+                    >
+                      Chat with Bri
+                    </h3>
+                    <p
+                      style={{
+                        margin: "3px 0 0",
+                        fontSize: "0.82rem",
+                        color: "rgba(255,255,255,0.8)",
+                        fontFamily: "Inter, sans-serif",
+                        maxWidth: 380,
+                      }}
+                    >
+                      Your AI LSAT coach — ask questions, get explanations, build your study plan
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => navigate("/chat")}
+                  style={{
+                    background: "white",
+                    color: "#0D9488",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "10px 20px",
+                    fontSize: "0.875rem",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontFamily: "Inter, sans-serif",
+                    whiteSpace: "nowrap",
+                    flexShrink: 0,
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#F0FDFA")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
+                >
+                  Start Chatting →
+                </button>
+              </div>
+            </div>
+
             {/* Stats row */}
             <div className="mb-8 grid grid-cols-3 gap-4">
               {(
